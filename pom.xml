@@ -1,17 +1,108 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <groupId>groupId</groupId>
-    <artifactId>razor-core-matching-engine</artifactId>
-    <version>1.0-SNAPSHOT</version>
-
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-    
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>razor.core</groupId>
+  <artifactId>razor-core-matching-engine</artifactId>
+  <packaging>jar</packaging>
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+  </properties>
+  <version>1.0-SNAPSHOT</version>
+  <name>razor-core-matching-engine</name>
+  <url>http://maven.apache.org</url>
+  <dependencies>
+<!--    Log4J-->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.20.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.20.0</version>
+    </dependency>
+<!--    Lombok-->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.24</version>
+      <scope>provided</scope>
+    </dependency>
+<!--    Junit-->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+<!--    Chronicle Queue - Ring Zero-->
+    <dependency>
+      <groupId>net.openhft</groupId>
+      <artifactId>chronicle-queue</artifactId>
+      <version>5.24ea12</version>
+    </dependency>
+<!--HazelCast-->
+      <dependency>
+        <groupId>com.hazelcast</groupId>
+        <artifactId>hazelcast</artifactId>
+        <version>5.2.3</version>
+      </dependency>
+<!--   Esper Rules Engine -->
+    <dependency>
+      <groupId>com.espertech</groupId>
+      <artifactId>esper-common</artifactId>
+      <version>8.9.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.espertech</groupId>
+      <artifactId>esper-compiler</artifactId>
+      <version>8.9.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.espertech</groupId>
+      <artifactId>esper-runtime</artifactId>
+      <version>8.9.0</version>
+    </dependency>
+<!--    LZ4Compressor-->
+    <dependency>
+      <groupId>org.lz4</groupId>
+      <artifactId>lz4-java</artifactId>
+      <version>1.8.0</version>
+    </dependency>
+<!--    GS Collection (Goldman Sachs Eclipse-->
+    <dependency>
+      <groupId>com.goldmansachs</groupId>
+      <artifactId>gs-collections-api</artifactId>
+      <version>7.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.goldmansachs</groupId>
+      <artifactId>gs-collections</artifactId>
+      <version>7.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.goldmansachs</groupId>
+      <artifactId>gs-collections-testutils</artifactId>
+      <version>7.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.goldmansachs</groupId>
+      <artifactId>gs-collections-forkjoin</artifactId>
+      <version>7.0.0</version>
+    </dependency>
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.13.1</version>
+          <scope>compile</scope>
+      </dependency>
+      <dependency>
+          <groupId>com.fasterxml.jackson.datatype</groupId>
+          <artifactId>jackson-datatype-jsr310</artifactId>
+          <version>2.9.5</version>
+      </dependency>
+  </dependencies>
 </project>

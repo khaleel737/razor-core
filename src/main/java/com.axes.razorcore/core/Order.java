@@ -1,41 +1,103 @@
 package com.axes.razorcore.core;
 
 import com.axes.razorcore.data.Instant;
-import com.axes.razorcore.data.Side;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import net.openhft.chronicle.bytes.BytesIn;
+import net.openhft.chronicle.bytes.BytesOut;
+import net.openhft.chronicle.bytes.WriteBytesMarshallable;
+import net.openhft.chronicle.core.io.InvalidMarshallableException;
 
-public class Order {
-     private final String orderId;
-        private final Side side;
-        private final long price;
-        private final long quantity;
-        private final Instant timestamp;
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
+import java.util.Objects;
 
-    public Order(String orderId, Side side, long price, long quantity, Instant timestamp) {
-        this.orderId = orderId;
-        this.side = side;
-        this.price = price;
-        this.quantity = quantity;
-        this.timestamp = timestamp;
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public final class Order implements WriteBytesMarshallable, IOrder {
+
+    @Getter
+    public long uuid;
+    @Getter
+    public long orderId;
+    @Getter
+    public long price;
+    @Getter
+    public long quantity;
+    @Getter
+    public Instant timestamp;
+    @Getter
+    public long size;
+    @Getter
+    public long filled;
+    @Getter
+    public long reserveBidPrice;
+    @Getter
+    public OrderAction action;
+
+    public Order(BytesIn bytes) {
+        this.uuid = bytes.readLong();
+        this.orderId = bytes.readLong();
+        this.price = bytes.readLong();
+        this.quantity = bytes.readLong();
+        this.timestamp = Instant.ofEpochMilli(bytes.readByte());
+        this.size = bytes.readLong();
+        this.filled = bytes.readLong();
+        this.reserveBidPrice = bytes.readLong();
+        this.action = OrderAction.of(bytes.readByte());
     }
 
-    public String getOrderId() {
-        return orderId;
+
+    @Override
+    public void writeMarshallable(BytesOut<?> bytes) throws IllegalStateException, BufferOverflowException, BufferUnderflowException, IllegalArgumentException, ArithmeticException, InvalidMarshallableException {
+        bytes.writeLong(uuid);
+        bytes.writeLong(orderId);
+        bytes.writeLong(price);
+        bytes.writeLong(quantity);
+        bytes.writeLong(size);
+        bytes.writeLong(filled);
+        bytes.writeLong(reserveBidPrice);
+        bytes.writeLong(action.getCode());
+        bytes.writeLong(timestamp.getNano());
     }
 
-    public Side getSide() {
-        return side;
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "uuid=" + uuid +
+                ", orderId=" + orderId +
+                ", price=" + price +
+                ", quantity=" + quantity +
+                ", timestamp=" + timestamp +
+                ", size=" + size +
+                ", filled=" + filled +
+                ", reserveBidPrice=" + reserveBidPrice +
+                ", action=" + action +
+                '}';
     }
 
-    public long getPrice() {
-        return price;
+    @Override
+    public int hashCode() {
+        return Objects.hash(orderId, action, price, size, filled, reserveBidPrice);
     }
 
-    public long getQuantity() {
-        return quantity;
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this) return true;
+        if(obj == null) return false;
+        if(!(obj instanceof Order other)) return false;
+
+        return orderId == other.orderId && action == other.action && price == other.price && size == other.size && filled == other.filled && reserveBidPrice == other.reserveBidPrice;
     }
 
-    public Instant getTimestamp() {
-        return timestamp;
+    @Override
+    public int stateHash() {
+        return hashCode();
     }
+}
 
-    }
+

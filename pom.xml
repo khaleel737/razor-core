@@ -37,6 +37,12 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+<!--      LMAX Disruptor-->
+      <dependency>
+          <groupId>com.lmax</groupId>
+          <artifactId>disruptor</artifactId>
+          <version>4.0.0.RC1</version>
+      </dependency>
 <!--    Chronicle Queue - Ring Zero-->
     <dependency>
       <groupId>net.openhft</groupId>
@@ -71,28 +77,29 @@
       <artifactId>lz4-java</artifactId>
       <version>1.8.0</version>
     </dependency>
-<!--    GS Collection (Goldman Sachs Eclipse-->
-    <dependency>
-      <groupId>com.goldmansachs</groupId>
-      <artifactId>gs-collections-api</artifactId>
-      <version>7.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.goldmansachs</groupId>
-      <artifactId>gs-collections</artifactId>
-      <version>7.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.goldmansachs</groupId>
-      <artifactId>gs-collections-testutils</artifactId>
-      <version>7.0.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.goldmansachs</groupId>
-      <artifactId>gs-collections-forkjoin</artifactId>
-      <version>7.0.0</version>
-    </dependency>
+<!--      Radix Tree Temporary-->
+      <dependency>
+          <groupId>exchange.core2</groupId>
+          <artifactId>collections</artifactId>
+          <version>0.5.1</version>
+      </dependency>
+<!--      Agrona Real Logic-->
+      <dependency>
+          <groupId>org.agrona</groupId>
+          <artifactId>agrona</artifactId>
+          <version>1.18.1</version>
+      </dependency>
+<!--    Eclipse Collection (Goldman Sachs Eclipse)-->
+      <dependency>
+          <groupId>org.eclipse.collections</groupId>
+          <artifactId>eclipse-collections-api</artifactId>
+          <version>11.1.0</version>
+      </dependency>
+      <dependency>
+          <groupId>org.eclipse.collections</groupId>
+          <artifactId>eclipse-collections</artifactId>
+          <version>11.1.0</version>
+      </dependency>
       <dependency>
           <groupId>junit</groupId>
           <artifactId>junit</artifactId>
@@ -103,6 +110,12 @@
           <groupId>com.fasterxml.jackson.datatype</groupId>
           <artifactId>jackson-datatype-jsr310</artifactId>
           <version>2.9.5</version>
+      </dependency>
+      <dependency>
+          <groupId>org.jetbrains</groupId>
+          <artifactId>annotations</artifactId>
+          <version>24.0.1</version>
+          <scope>provided</scope>
       </dependency>
   </dependencies>
 </project>

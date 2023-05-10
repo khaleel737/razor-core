@@ -14,7 +14,7 @@ public class HazelcastOptions {
 
 @Data
 @AllArgsConstructor
-public
+
 class HazelcastMapConfig {
     private final String name;
     private final int timeToLiveSeconds;

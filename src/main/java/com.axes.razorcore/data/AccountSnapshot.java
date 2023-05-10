@@ -1,22 +1,28 @@
 package com.axes.razorcore.data;
 
 import lombok.Data;
+import net.openhft.chronicle.wire.Marshallable;
+import net.openhft.chronicle.wire.SelfDescribingMarshallable;
 
 import java.io.Serializable;
 
 @Data
-public class AccountSnapshot implements Serializable {
+public class AccountSnapshot extends SelfDescribingMarshallable implements Serializable, Marshallable {
     // fields and getters/setters for account balances
-     private final String accountId;
-        private final long availableBalance;
-        private final long pendingBalance;
+    private String accountId;
+    private long availableBalance;
+    private long pendingBalance;
 
-        public AccountSnapshot(String accountId, long availableBalance, long pendingBalance) {
-            this.accountId = accountId;
-            this.availableBalance = availableBalance;
-            this.pendingBalance = pendingBalance;
-        }
+    public AccountSnapshot() {
+        // default constructor
+    }
 
-        // getters for all fields
+    public AccountSnapshot(String accountId, long availableBalance, long pendingBalance) {
+        this.accountId = accountId;
+        this.availableBalance = availableBalance;
+        this.pendingBalance = pendingBalance;
+    }
+
+
+    // getters/setters for all fields
 }
-

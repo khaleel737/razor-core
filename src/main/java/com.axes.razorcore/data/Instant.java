@@ -1,7 +1,10 @@
 package com.axes.razorcore.data;
 
+import lombok.Getter;
+
 import java.util.Date;
 
+@Getter
 public final class Instant {
     private final long epochSecond;
     private final int nano;

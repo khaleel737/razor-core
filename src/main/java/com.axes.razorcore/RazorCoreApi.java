@@ -1,4 +1,14 @@
 package com.axes.razorcore;
 
-public class RazorCoreApi {
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public final class RazorCoreApi {
+
+
+
 }
+

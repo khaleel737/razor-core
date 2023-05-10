@@ -1,10 +1,7 @@
 package com.axes.razorcore.core;
 
 import com.axes.razorcore.utils.StateHash;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.*;
 import net.openhft.chronicle.bytes.BytesIn;
 import net.openhft.chronicle.bytes.BytesOut;
 import net.openhft.chronicle.bytes.WriteBytesMarshallable;
@@ -14,6 +11,7 @@ import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.util.Objects;
 
+@Builder
 @AllArgsConstructor
 @Getter
 @ToString
@@ -32,7 +30,7 @@ public class SymbolSpecification implements WriteBytesMarshallable, StateHash {
 
 
     //Constructor for All Symbols, Need to seperate them for each of their own builder classes
-    public SymbolSpecification(BytesIn bytes, EquitySymbolSpecification equitySymbolSpecification, ForexSymbolSpecification forexSymbolSpecification, OptionsSymbolSpecification optionsSymbolSpecification, FuturesSymbolSpecification futuresSymbolSpecification) {
+    public SymbolSpecification(BytesIn bytes) {
         this.symbolId = bytes.readInt();
         this.type = SymbolType.of(bytes.readByte());
         this.exchange = bytes.readUtf8();

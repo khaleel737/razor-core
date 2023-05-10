@@ -1,8 +1,6 @@
 package com.axes.razorcore.core;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
+import lombok.*;
 import net.openhft.chronicle.bytes.BytesIn;
 import net.openhft.chronicle.bytes.BytesOut;
 import net.openhft.chronicle.core.io.InvalidMarshallableException;
@@ -14,6 +12,7 @@ import java.util.Objects;
 
 @Builder
 @Getter
+@ToString
 public class EquitySymbolSpecification extends SymbolSpecification {
 
     // equity specification

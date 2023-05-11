@@ -30,29 +30,29 @@ public class MatchTradeEventHandler {
     public MatchTradeEventHandler matchTradeNextEvent;
 
 //    TESTING
-//public MatcherTradeEvent copy() {
-//    MatcherTradeEvent evt = new MatcherTradeEvent();
-//    evt.eventType = this.eventType;
-//    evt.section = this.section;
-//    evt.activeOrderCompleted = this.activeOrderCompleted;
-//    evt.matchedOrderId = this.matchedOrderId;
-//    evt.matchedOrderUid = this.matchedOrderUid;
-//    evt.matchedOrderCompleted = this.matchedOrderCompleted;
-//    evt.price = this.price;
-//    evt.size = this.size;
-////        evt.timestamp = this.timestamp;
-//    evt.bidderHoldPrice = this.bidderHoldPrice;
-//    return evt;
-//}
-//
-//    // testing only
-//    public MatcherTradeEvent findTail() {
-//        MatcherTradeEvent tail = this;
-//        while (tail.nextEvent != null) {
-//            tail = tail.nextEvent;
-//        }
-//        return tail;
-//    }
+public MatchTradeEventHandler copy() {
+    MatchTradeEventHandler eventType = new MatchTradeEventHandler();
+    eventType.matchEventType = this.matchEventType;
+    eventType.section = this.section;
+    eventType.activeOrderCompleted = this.activeOrderCompleted;
+    eventType.matchedPositionsId = this.matchedPositionsId;
+    eventType.matchedPositionsUuid = this.matchedPositionsUuid;
+    eventType.matchedPositionsCompleted = this.matchedPositionsCompleted;
+    eventType.price = this.price;
+    eventType.size = this.size;
+//        evt.timestamp = this.timestamp;
+    eventType.bidderHoldPrice = this.bidderHoldPrice;
+    return eventType;
+}
+
+    // testing only
+    public MatchTradeEventHandler findTail() {
+        MatchTradeEventHandler tail = this;
+        while (tail.matchTradeNextEvent != null) {
+            tail = tail.matchTradeNextEvent;
+        }
+        return tail;
+    }
 
     public int getChainSize() {
         MatchTradeEventHandler tail = this;
@@ -130,4 +130,5 @@ public class MatchTradeEventHandler {
                 ", matchTradeNextEvent=" + matchTradeNextEvent +
                 '}';
     }
+
 }

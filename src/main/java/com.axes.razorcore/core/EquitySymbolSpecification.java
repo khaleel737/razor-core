@@ -19,10 +19,12 @@ public class EquitySymbolSpecification extends SymbolSpecification {
     public final String equityName; // name of equity stock
     public final String equitySymbol; // symbol of equity stock
     public final long equityPrice;
+    public final SymbolSpecification symbolSpecification;
 
     //    Constructor for All Equity Symbols
     public EquitySymbolSpecification(BytesIn bytes, int symbolId, @NonNull SymbolType type, String exchange, long takerFee, long makerFee, long marginBuy, long marginSell) {
-        super(symbolId, type, exchange, takerFee, makerFee, marginBuy, marginSell);
+        super(bytes);
+        this.symbolSpecification = new SymbolSpecification(symbolId, type, exchange, takerFee, makerFee, marginBuy, marginSell);
         this.equityName = bytes.readUtf8();
         this.equitySymbol = bytes.readUtf8();
         this.equityPrice = bytes.readLong();

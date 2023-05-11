@@ -18,9 +18,10 @@ public class FuturesSymbolSpecification extends SymbolSpecification {
     public final String futuresContractSymbol; // symbol of futures contract
     public final long expirationTimeF; // expiration time of futures contract
     public final long contractSizeF; // size of futures contract
-
-    public FuturesSymbolSpecification(BytesIn bytes, int symbolId, @NonNull SymbolType type, String exchange, long takerFee, long makerFee, long marginBuy, long marginSell) {
-        super(symbolId, type, exchange, takerFee, makerFee, marginBuy, marginSell);
+    public final SymbolSpecification symbolSpecification;
+    public FuturesSymbolSpecification(BytesIn bytes, int symbolId, @NonNull SymbolType type, String exchange, long takerFee, long makerFee, long marginBuy, long marginSell, SymbolSpecification symbolSpecification) {
+        super(bytes);
+        this.symbolSpecification = new SymbolSpecification(symbolId, type, exchange, takerFee, makerFee, marginBuy, marginSell);
         this.futuresContractName = bytes.readUtf8();
         this.futuresContractSymbol = bytes.readUtf8();
         this.expirationTimeF = bytes.readLong();

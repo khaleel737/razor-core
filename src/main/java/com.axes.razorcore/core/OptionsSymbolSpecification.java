@@ -16,9 +16,11 @@ public class OptionsSymbolSpecification extends SymbolSpecification {
     public final long exercisePrice; // option exercise price
     public final OrderDirection optionType; // option type (call/put)
     public final long expirationDate; // option expiration date
+    public final SymbolSpecification symbolSpecification;
 
     public OptionsSymbolSpecification(BytesIn bytes, int symbolId, @NonNull SymbolType type, String exchange, long takerFee, long makerFee, long marginBuy, long marginSell) {
-        super(symbolId, type, exchange, takerFee, makerFee, marginBuy, marginSell);
+        super(bytes);
+        this.symbolSpecification = new SymbolSpecification(symbolId, type, exchange, takerFee, makerFee, marginBuy, marginSell);
         this.equityOptionName = bytes.readUtf8();
         this.equityOptionSymbol = bytes.readUtf8();
         this.contractSizeO = bytes.readLong();

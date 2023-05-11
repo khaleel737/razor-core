@@ -31,7 +31,7 @@ public class SymbolSpecification implements WriteBytesMarshallable, StateHash {
 
     //Constructor for All Symbols, Need to seperate them for each of their own builder classes
     public SymbolSpecification(BytesIn bytes) {
-        this.symbolId = bytes.readInt();
+            this.symbolId = bytes.readInt();
         this.type = SymbolType.of(bytes.readByte());
         this.exchange = bytes.readUtf8();
         this.takerFee = bytes.readLong();

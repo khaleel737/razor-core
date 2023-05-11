@@ -7,6 +7,7 @@ import java.util.Arrays;
 @ToString
 public class L2MarketData {
 
+    public static final int L2_SIZE = 32;
     public int askSize;
     public int bidSize;
 

@@ -77,7 +77,7 @@ public final class PerformanceConfiguration {
     /*
      * Disruptor wait strategy
      */
-    private final CoreWaitStrategy waitStrategy;
+    private final RazorCoreWaitStrategy waitStrategy;
 
     /*
      * Order books factory

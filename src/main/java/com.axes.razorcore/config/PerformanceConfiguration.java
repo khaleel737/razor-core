@@ -1,5 +1,8 @@
 package com.axes.razorcore.config;
 
+import com.axes.razorcore.orderbook.IOrderBook;
+import com.axes.razorcore.orderbook.OrderBookDirectImpl;
+import com.axes.razorcore.orderbook.OrderBookNaiveImpl;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -119,7 +122,7 @@ public final class PerformanceConfiguration {
                 .sendL2ForEveryCmd(false)
                 .l2RefreshDepth(8)
                 .threadFactory(Thread::new)
-                .waitStrategy(CoreWaitStrategy.BLOCKING)
+                .waitStrategy(RazorCoreWaitStrategy.BLOCKING)
                 .binaryCommandsLz4CompressorFactory(() -> LZ4Factory.fastestInstance().highCompressor())
                 .orderBookFactory(OrderBookNaiveImpl::new);
     }
@@ -135,7 +138,7 @@ public final class PerformanceConfiguration {
                 .sendL2ForEveryCmd(false)
                 .l2RefreshDepth(8)
                 .threadFactory(new AffinityThreadFactory(AffinityThreadFactory.ThreadAffinityMode.THREAD_AFFINITY_ENABLE_PER_LOGICAL_CORE))
-                .waitStrategy(CoreWaitStrategy.BUSY_SPIN)
+                .waitStrategy(RazorCoreWaitStrategy.BUSY_SPIN)
                 .binaryCommandsLz4CompressorFactory(() -> LZ4Factory.fastestInstance().highCompressor())
                 .orderBookFactory(OrderBookDirectImpl::new);
     }
@@ -151,7 +154,7 @@ public final class PerformanceConfiguration {
                 .sendL2ForEveryCmd(false)
                 .l2RefreshDepth(8)
                 .threadFactory(new AffinityThreadFactory(AffinityThreadFactory.ThreadAffinityMode.THREAD_AFFINITY_ENABLE_PER_LOGICAL_CORE))
-                .waitStrategy(CoreWaitStrategy.BUSY_SPIN)
+                .waitStrategy(RazorCoreWaitStrategy.BUSY_SPIN)
                 .binaryCommandsLz4CompressorFactory(() -> LZ4Factory.fastestInstance().highCompressor())
                 .orderBookFactory(OrderBookDirectImpl::new);
     }

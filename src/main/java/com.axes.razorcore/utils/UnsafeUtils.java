@@ -15,9 +15,9 @@
  */
 package com.axes.razorcore.utils;
 
-import exchange.core2.core.common.MatcherTradeEvent;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.cmd.OrderCommand;
+import com.axes.razorcore.data.CommandResultCode;
+import com.axes.razorcore.data.OrderCommand;
+import com.axes.razorcore.event.MatchTradeEventHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import static net.openhft.chronicle.core.UnsafeMemory.UNSAFE;
@@ -60,18 +60,18 @@ public final class UnsafeUtils {
     }
 
     public static void appendEventsVolatile(final OrderCommand cmd,
-                                            final MatcherTradeEvent eventHead) {
+                                            final MatchTradeEventHandler eventHead) {
 
-        final MatcherTradeEvent tail = eventHead.findTail();
+        final MatchTradeEventHandler tail = eventHead.findTail();
 
         //MatcherTradeEvent.asList(eventHead).forEach(a -> log.info("in {}", a));
 
         do {
             // read current head and attach to the tail of new
-            tail.nextEvent = (MatcherTradeEvent) UNSAFE.getObjectVolatile(cmd, OFFSET_EVENT);
+            tail.matchTradeNextEvent = (MatchTradeEventHandler) UNSAFE.getObjectVolatile(cmd, OFFSET_EVENT);
 
             // do a CAS operation
-        } while (!UNSAFE.compareAndSwapObject(cmd, OFFSET_EVENT, tail.nextEvent, eventHead));
+        } while (!UNSAFE.compareAndSwapObject(cmd, OFFSET_EVENT, tail.matchTradeNextEvent, eventHead));
     }
 
 }

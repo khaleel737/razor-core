@@ -1,7 +1,5 @@
 package com.axes.razorcore.utils;
 
-import com.axes.razorcore.processors.TwoStepSlaveProcessor;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.affinity.AffinityLock;

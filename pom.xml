@@ -31,6 +31,39 @@
           <version>4.5.1</version>
           <scope>test</scope>
       </dependency>
+      <!-- Apache Commons -->
+      <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+          <version>3.12.0</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-math3</artifactId>
+          <version>3.6.1</version>
+          <scope>test</scope>
+      </dependency>
+<!--      HDR Histogram-->
+      <dependency>
+          <groupId>org.hdrhistogram</groupId>
+          <artifactId>HdrHistogram</artifactId>
+          <version>2.1.12</version>
+          <scope>test</scope>
+      </dependency>
+
+      <dependency>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+          <version>1.2.11</version>
+          <scope>test</scope>
+          <exclusions>
+              <exclusion>
+                  <artifactId>slf4j-api</artifactId>
+                  <groupId>org.slf4j</groupId>
+              </exclusion>
+          </exclusions>
+      </dependency>
 <!--      Unit Tests-->
       <dependency>
           <groupId>org.junit.jupiter</groupId>

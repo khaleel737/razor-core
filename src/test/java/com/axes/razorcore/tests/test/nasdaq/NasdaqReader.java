@@ -1,14 +1,14 @@
 package com.axes.razorcore.tests.test.nasdaq;
 
+import com.axes.razorcore.RazorCoreApi;
+import com.axes.razorcore.config.InitialStateConfiguration;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.config.SerializationConfiguration;
+import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
+import com.axes.razorcore.tests.test.util.ExecutionTime;
+import com.axes.razorcore.tests.test.util.TestConstants;
 import com.paritytrading.juncture.nasdaq.itch50.ITCH50Parser;
 import com.paritytrading.nassau.util.BinaryFILE;
-import exchange.core2.core.ExchangeApi;
-import exchange.core2.core.common.config.InitialStateConfiguration;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.core.common.config.SerializationConfiguration;
-import exchange.core2.tests.util.ExchangeTestContainer;
-import exchange.core2.tests.util.ExecutionTime;
-import exchange.core2.tests.util.TestConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.agrona.BitUtil;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ public class NasdaqReader {
         try (final ExchangeTestContainer container = ExchangeTestContainer.create(perfCfg, initStateCfg, SerializationConfiguration.DEFAULT)) {
 
 
-            final ExchangeApi api = container.getApi();
+            final RazorCoreApi api = container.getApi();
 
 
             // common accounts configuration for all users

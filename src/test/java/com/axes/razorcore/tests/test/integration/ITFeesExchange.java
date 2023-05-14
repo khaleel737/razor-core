@@ -15,20 +15,21 @@
  */
 package com.axes.razorcore.tests.test.integration;
 
-import exchange.core2.core.common.OrderAction;
-import exchange.core2.core.common.OrderType;
-import exchange.core2.core.common.api.ApiCancelOrder;
-import exchange.core2.core.common.api.ApiPlaceOrder;
-import exchange.core2.core.common.api.reports.TotalCurrencyBalanceReportResult;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.ExchangeTestContainer;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.core.OrderAction;
+import com.axes.razorcore.core.OrderType;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.command.ApiCancelOrder;
+import com.axes.razorcore.cqrs.command.ApiPlaceOrder;
+import com.axes.razorcore.cqrs.query.TotalCurrencyBalanceReportResult;
+import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import static exchange.core2.core.common.OrderType.GTC;
-import static exchange.core2.tests.util.TestConstants.*;
+import static com.axes.razorcore.core.OrderType.GTC;
+import static com.axes.razorcore.tests.test.util.TestConstants.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -64,7 +65,7 @@ public abstract class ITFeesExchange {
             container.createUserWithMoney(UID_2, CURRENECY_LTC, ltcAmount);
 
             // submit BID order for 1000 lots - should be rejected because of the fee
-            final ApiPlaceOrder order203 = ApiPlaceOrder.builder().uid(UID_2).orderId(203).price(11_400).reservePrice(11_400).size(30).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE_FEE).build();
+            final ApiPlaceOrder order203 = ApiPlaceOrder.builder().uuid(UID_2).orderId(203).price(11_400).reservePrice(11_400).size(30).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE_FEE).build();
             container.submitCommandSync(order203, CommandResultCode.RISK_NSF);
 
             // add fee-1 - NSF
@@ -77,7 +78,7 @@ public abstract class ITFeesExchange {
 
             // cancel bid
             container.submitCommandSync(
-                    ApiCancelOrder.builder().orderId(203).uid(UID_2).symbol(SYMBOL_EXCHANGE_FEE).build(),
+                    ApiCancelOrder.builder().orderId(203).uuid(UID_2).symbol(SYMBOL_EXCHANGE_FEE).build(),
                     CommandResultCode.SUCCESS);
 
             container.validateUserState(UID_2, profile -> {
@@ -97,12 +98,12 @@ public abstract class ITFeesExchange {
             container.addMoneyToUser(UID_2, CURRENECY_XBT, btcAmount);
 
             // can place ASK order, no extra is fee required for lock hold
-            final ApiPlaceOrder order204 = ApiPlaceOrder.builder().uid(UID_2).orderId(204).price(11_400).reservePrice(11_400).size(100).action(OrderAction.ASK).orderType(GTC).symbol(SYMBOL_EXCHANGE_FEE).build();
+            final ApiPlaceOrder order204 = ApiPlaceOrder.builder().uuid(UID_2).orderId(204).price(11_400).reservePrice(11_400).size(100).action(OrderAction.ASK).orderType(GTC).symbol(SYMBOL_EXCHANGE_FEE).build();
             container.submitCommandSync(order204, CommandResultCode.SUCCESS);
 
             // cancel ask
             container.submitCommandSync(
-                    ApiCancelOrder.builder().orderId(204).uid(UID_2).symbol(SYMBOL_EXCHANGE_FEE).build(),
+                    ApiCancelOrder.builder().orderId(204).uuid(UID_2).symbol(SYMBOL_EXCHANGE_FEE).build(),
                     CommandResultCode.SUCCESS);
 
             container.validateUserState(UID_2, profile -> {
@@ -132,7 +133,7 @@ public abstract class ITFeesExchange {
 
             // submit an GtC order - limit BUY 1,731 lots, price 115M (11,500 x10,000 step) for each lot 1M satoshi
             final ApiPlaceOrder order101 = ApiPlaceOrder.builder()
-                    .uid(UID_1)
+                    .uuid(UID_1)
                     .orderId(101L)
                     .price(11_500L)
                     .reservePrice(11_553L)
@@ -164,7 +165,7 @@ public abstract class ITFeesExchange {
 
             // submit an IoC order - sell 2,000 lots, price 114,930K (11,493 x10,000 step)
             final ApiPlaceOrder order102 = ApiPlaceOrder.builder()
-                    .uid(UID_2)
+                    .uuid(UID_2)
                     .orderId(102)
                     .price(11_493L)
                     .size(2000L)
@@ -212,7 +213,7 @@ public abstract class ITFeesExchange {
 
             // submit an GtC order - limit BUY 1,731 lots, price 115M (11,500 x10,000 step) for each lot 1M satoshi
             final ApiPlaceOrder order101 = ApiPlaceOrder.builder()
-                    .uid(UID_1)
+                    .uuid(UID_1)
                     .orderId(101L)
                     .price(11_500L)
                     .reservePrice(11_553L)
@@ -244,7 +245,7 @@ public abstract class ITFeesExchange {
 
             // submit an IoC order - sell 1,000 lots, price 114,930K (11,493 x10,000 step)
             final ApiPlaceOrder order102 = ApiPlaceOrder.builder()
-                    .uid(UID_2)
+                    .uuid(UID_2)
                     .orderId(102)
                     .price(11_493L)
                     .size(1000L)
@@ -293,7 +294,7 @@ public abstract class ITFeesExchange {
 
             // submit an ASK GtC order, no fees, sell 2,000 lots, price 115,000K (11,500 x10,000 step)
             final ApiPlaceOrder order101 = ApiPlaceOrder.builder()
-                    .uid(UID_1)
+                    .uuid(UID_1)
                     .orderId(101L)
                     .price(11_500L)
                     .reservePrice(11_500L)
@@ -323,7 +324,7 @@ public abstract class ITFeesExchange {
 
             // submit an IoC order - ASK 2,197 lots, price 115,210K (11,521 x10,000 step) for each lot 1M satoshi
             final ApiPlaceOrder order102 = ApiPlaceOrder.builder()
-                    .uid(UID_2)
+                    .uuid(UID_2)
                     .orderId(102)
                     .price(11_521L)
                     .reservePrice(11_659L)
@@ -372,7 +373,7 @@ public abstract class ITFeesExchange {
 
             // submit an ASK GtC order, no fees, sell 2,000 lots, price 115,000K (11,500 x10,000 step)
             final ApiPlaceOrder order101 = ApiPlaceOrder.builder()
-                    .uid(UID_1)
+                    .uuid(UID_1)
                     .orderId(101L)
                     .price(11_500L)
                     .reservePrice(11_500L)
@@ -402,7 +403,7 @@ public abstract class ITFeesExchange {
 
             // submit an IoC order - ASK 1,997 lots, price 115,210K (11,521 x10,000 step) for each lot 1M satoshi
             final ApiPlaceOrder order102 = ApiPlaceOrder.builder()
-                    .uid(UID_2)
+                    .uuid(UID_2)
                     .orderId(102)
                     .price(11_521L)
                     .reservePrice(11_659L)

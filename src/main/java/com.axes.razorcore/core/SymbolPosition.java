@@ -50,7 +50,7 @@ public SymbolPosition(long uuid, BytesIn bytes) {
 }
 
     public boolean isEmpty() {
-        return direction == PositionDirection.EMPTY
+        return orderDirection == OrderDirection.EMPTY
                 && pendingSellSize == 0
                 && pendingBuySize == 0;
     }

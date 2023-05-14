@@ -16,7 +16,7 @@
 package com.axes.razorcore.cqrs.query;
 
 
-import exchange.core2.core.utils.SerializationUtils;
+import com.axes.razorcore.utils.SerializationUtils;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.bytes.BytesIn;

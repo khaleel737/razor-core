@@ -75,6 +75,14 @@ public class L2MarketData {
         return totalVolumes;
     }
 
+    public long totalOrderBookVolumeBid() {
+        long totalVolume = 0L;
+        for (int i = 0; i < bidSize; i++) {
+            totalVolume += bidVolumes[i];
+        }
+        return totalVolume;
+    }
+
     public L2MarketData copy() {
         return new L2MarketData(getAskPricesCopy(), getAskVolumesCopy(), getAskOrdersCopy(), getBidPricesCopy(), getBidVolumesCopy(), getBidOrdersCopy());
     }

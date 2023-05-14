@@ -15,10 +15,10 @@
  */
 package com.axes.razorcore.cqrs.query;
 
-import exchange.core2.core.common.Order;
-import exchange.core2.core.common.UserProfile;
-import exchange.core2.core.processors.MatchingEngineRouter;
-import exchange.core2.core.processors.RiskEngine;
+import com.axes.razorcore.core.Order;
+import com.axes.razorcore.core.UserProfile;
+import com.axes.razorcore.service.MatchingEngineRouter;
+import com.axes.razorcore.service.RiskEngine;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -84,11 +84,11 @@ public final class SingleUserReportQuery implements ReportQuery<SingleUserReport
         final UserProfile userProfile = riskEngine.getUserProfileService().getUserProfile(this.uid);
 
         if (userProfile != null) {
-            final IntObjectHashMap<SingleUserReportResult.Position> positions = new IntObjectHashMap<>(userProfile.positions.size());
-            userProfile.positions.forEachKeyValue((symbol, pos) ->
+            final IntObjectHashMap<SingleUserReportResult.Position> positions = new IntObjectHashMap<>(userProfile.userPositions.size());
+            userProfile.userPositions.forEachKeyValue((symbol, pos) ->
                     positions.put(symbol, new SingleUserReportResult.Position(
                             pos.currency,
-                            pos.direction,
+                            pos.orderDirection,
                             pos.openVolume,
                             pos.openPriceSum,
                             pos.profit,

@@ -6,6 +6,7 @@ import com.axes.razorcore.cqrs.CommandResultCode;
 import com.axes.razorcore.cqrs.OrderCommand;
 import com.axes.razorcore.cqrs.OrderCommandType;
 import com.axes.razorcore.data.L2MarketData;
+import com.axes.razorcore.event.MatchTradeEventHandler;
 import exchange.core2.collections.art.LongAdaptiveRadixTreeMap;
 import exchange.core2.collections.objpool.ObjectsPool;
 import lombok.*;
@@ -135,7 +136,7 @@ public class OrderBookDirectImpl implements IOrderBook {
         orderRecord.size = size;
         orderRecord.reserveBidPrice = command.reserveBidPrice;
         orderRecord.action = command.action;
-        orderRecord.uid = command.uuid;
+        orderRecord.uuid = command.uuid;
         orderRecord.timestamp = command.timestamp;
         orderRecord.filled = filledSize;
 
@@ -199,7 +200,7 @@ public class OrderBookDirectImpl implements IOrderBook {
             // switch to next order (can be null)
             makerOrder = bucket.tail.prev;
         }
-        if (logDebug) log.debug("not enough liquidity to fill size={}", size);
+        if (logDebug) log.debug("not enough liquuidity to fill size={}", size);
         return Long.MAX_VALUE;
     }
 
@@ -209,7 +210,7 @@ public class OrderBookDirectImpl implements IOrderBook {
 
         final boolean isBidAction = takerOrder.getAction() == OrderAction.BID;
 
-        final long limitPrice = (triggerCmd.command == OrderCommandType.PLACE_ORDER && triggerCmd.orderType == OrderType.FOK_BUDGET && !isBidAction)
+        final long limitPrice = (triggerCmd.commandType == OrderCommandType.PLACE_ORDER && triggerCmd.orderType == OrderType.FOK_BUDGET && !isBidAction)
                 ? 0L
                 : takerOrder.getPrice();
 
@@ -239,7 +240,7 @@ public class OrderBookDirectImpl implements IOrderBook {
 
 //        log.debug("MATCHING taker: {} remainingSize={}", takerOrder, remainingSize);
 
-        MatcherTradeEvent eventsTail = null;
+        MatchTradeEventHandler eventsTail = null;
 
         // iterate through all orders
         do {
@@ -260,13 +261,13 @@ public class OrderBookDirectImpl implements IOrderBook {
                 makerOrder.parent.numOrders--;
             }
 
-            final MatcherTradeEvent tradeEvent = eventsHelper.sendTradeEvent(makerOrder, makerCompleted, remainingSize == 0, tradeSize,
+            final MatchTradeEventHandler tradeEvent = eventsHelper.sendTradeEvent(makerOrder, makerCompleted, remainingSize == 0, tradeSize,
                     isBidAction ? takerReserveBidPrice : makerOrder.reserveBidPrice);
 
             if (eventsTail == null) {
-                triggerCmd.matcherEvent = tradeEvent;
+                triggerCmd.matchTradeEventHandler = tradeEvent;
             } else {
-                eventsTail.nextEvent = tradeEvent;
+                eventsTail.matchTradeNextEvent = tradeEvent;
             }
             eventsTail = tradeEvent;
 
@@ -325,7 +326,7 @@ public class OrderBookDirectImpl implements IOrderBook {
 
         // TODO avoid double lookup ?
         final DirectOrder order = orderIdIndex.get(command.orderId);
-        if (order == null || order.uid != command.uid) {
+        if (order == null || order.uuid != command.uuid) {
             return CommandResultCode.MATCHING_UNKNOWN_ORDER_ID;
         }
         orderIdIndex.remove(command.orderId);
@@ -339,7 +340,7 @@ public class OrderBookDirectImpl implements IOrderBook {
         // fill action fields (for events handling)
         command.action = order.getAction();
 
-        command.matcherEvent = eventsHelper.sendReduceEvent(order, order.getSize() - order.getFilled(), true);
+        command.matchTradeEventHandler = eventsHelper.sendReduceEvent(order, order.getSize() - order.getFilled(), true);
 
         return CommandResultCode.SUCCESS;
     }
@@ -354,7 +355,7 @@ public class OrderBookDirectImpl implements IOrderBook {
         }
 
         final DirectOrder order = orderIdIndex.get(orderId);
-        if (order == null || order.uid != command.uid) {
+        if (order == null || order.uuid != command.uuid) {
             return CommandResultCode.MATCHING_UNKNOWN_ORDER_ID;
         }
 
@@ -377,7 +378,7 @@ public class OrderBookDirectImpl implements IOrderBook {
             order.parent.volume -= reduceBy;
         }
 
-        command.matcherEvent = eventsHelper.sendReduceEvent(order, reduceBy, canRemove);
+        command.matchTradeEventHandler = eventsHelper.sendReduceEvent(order, reduceBy, canRemove);
 
         // fill action fields (for events handling)
         command.action = order.getAction();
@@ -390,12 +391,12 @@ public class OrderBookDirectImpl implements IOrderBook {
 
         // order lookup
         final DirectOrder orderToMove = orderIdIndex.get(command.orderId);
-        if (orderToMove == null || orderToMove.uid != command.uid) {
+        if (orderToMove == null || orderToMove.uuid != command.uuid) {
             return CommandResultCode.MATCHING_UNKNOWN_ORDER_ID;
         }
 
         // risk check for exchange bids
-        if (symbolSpec.type == SymbolType.CURRENCY_EXCHANGE_PAIR && orderToMove.action == OrderAction.BID && command.price > orderToMove.reserveBidPrice) {
+        if (symbolSpec.type == SymbolType.CURRENCY_EXCHANGE_PAIRS && orderToMove.action == OrderAction.BID && command.price > orderToMove.reserveBidPrice) {
             return CommandResultCode.MATCHING_MOVE_FAILED_PRICE_OVER_RISK_LIMIT;
         }
 
@@ -705,10 +706,10 @@ public class OrderBookDirectImpl implements IOrderBook {
     }
 
     @Override
-    public List<Order> findUserOrders(long uid) {
+    public List<Order> findUserOrders(long uuid) {
         final List<Order> list = new ArrayList<>();
         orderIdIndex.forEach((orderId, order) -> {
-            if (order.uid == uid) {
+            if (order.uuid == uuid) {
                 list.add(Order.builder()
                         .orderId(orderId)
                         .price(order.price)
@@ -716,7 +717,7 @@ public class OrderBookDirectImpl implements IOrderBook {
                         .filled(order.filled)
                         .reserveBidPrice(order.reserveBidPrice)
                         .action(order.action)
-                        .uid(order.uid)
+                        .uuid(order.uuid)
                         .timestamp(order.timestamp)
                         .build());
             }
@@ -763,12 +764,12 @@ public class OrderBookDirectImpl implements IOrderBook {
     }
 
     @Override
-    public int getTotalAskBuckets(final int limit) {
+    public int getTotalAskBucket(final int limit) {
         return askPriceBuckets.size(limit);
     }
 
     @Override
-    public int getTotalBidBuckets(final int limit) {
+    public int getTotalBidBucket(final int limit) {
         return bidPriceBuckets.size(limit);
     }
 
@@ -808,7 +809,7 @@ public class OrderBookDirectImpl implements IOrderBook {
         public OrderAction action;
 
         @Getter
-        public long uid;
+        public long uuid;
 
         @Getter
         public long timestamp;
@@ -835,7 +836,7 @@ public class OrderBookDirectImpl implements IOrderBook {
             this.filled = bytes.readLong(); // filled
             this.reserveBidPrice = bytes.readLong(); // price2
             this.action = OrderAction.of(bytes.readByte());
-            this.uid = bytes.readLong(); // uid
+            this.uuid = bytes.readLong(); // uuid
             this.timestamp = bytes.readLong(); // timestamp
             // this.userCookie = bytes.readInt();  // userCookie
 
@@ -850,7 +851,7 @@ public class OrderBookDirectImpl implements IOrderBook {
             bytes.writeLong(filled);
             bytes.writeLong(reserveBidPrice);
             bytes.writeByte(action.getCode());
-            bytes.writeLong(uid);
+            bytes.writeLong(uuid);
             bytes.writeLong(timestamp);
             // bytes.writeInt(userCookie);
             // TODO
@@ -861,14 +862,14 @@ public class OrderBookDirectImpl implements IOrderBook {
             return "[" + orderId + " " + (action == OrderAction.ASK ? 'A' : 'B')
                     + price + ":" + size + "F" + filled
                     // + " C" + userCookie
-                    + " U" + uid + "]";
+                    + " U" + uuid + "]";
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(orderId, action, price, size, reserveBidPrice, filled,
                     //userCookie,
-                    uid);
+                    uuid);
         }
 
 
@@ -890,14 +891,14 @@ public class OrderBookDirectImpl implements IOrderBook {
                     && size == other.size
                     && reserveBidPrice == other.reserveBidPrice
                     && filled == other.filled
-                    && uid == other.uid;
+                    && uuid == other.uuid;
         }
 
         @Override
         public int stateHash() {
             return Objects.hash(orderId, action, price, size, reserveBidPrice, filled,
                     //userCookie,
-                    uid);
+                    uuid);
         }
     }
 

@@ -15,21 +15,21 @@
  */
 package com.axes.razorcore.tests.test.integration;
 
-import exchange.core2.core.common.OrderAction;
-import exchange.core2.core.common.OrderType;
-import exchange.core2.core.common.PositionDirection;
-import exchange.core2.core.common.api.ApiCancelOrder;
-import exchange.core2.core.common.api.ApiPlaceOrder;
-import exchange.core2.core.common.api.reports.TotalCurrencyBalanceReportResult;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.ExchangeTestContainer;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.core.OrderAction;
+import com.axes.razorcore.core.OrderDirection;
+import com.axes.razorcore.core.OrderType;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.command.ApiCancelOrder;
+import com.axes.razorcore.cqrs.command.ApiPlaceOrder;
+import com.axes.razorcore.cqrs.query.TotalCurrencyBalanceReportResult;
+import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import static exchange.core2.core.common.OrderType.GTC;
-import static exchange.core2.tests.util.TestConstants.*;
+import static com.axes.razorcore.core.OrderType.GTC;
+import static com.axes.razorcore.tests.test.util.TestConstants.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -60,7 +60,7 @@ public abstract class ITFeesMargin {
             container.createUserWithMoney(UID_1, CURRENECY_JPY, jpyAmount1);
 
             final ApiPlaceOrder order101 = ApiPlaceOrder.builder()
-                    .uid(UID_1)
+                    .uuid(UID_1)
                     .orderId(101L)
                     .price(10770L)
                     .reservePrice(0L)
@@ -90,7 +90,7 @@ public abstract class ITFeesMargin {
             assertThat(totalBal1.getOpenInterestLong().get(symbolId), is(0L));
 
             final ApiPlaceOrder order102 = ApiPlaceOrder.builder()
-                    .uid(UID_2)
+                    .uuid(UID_2)
                     .orderId(102)
                     .price(10770L)
                     .reservePrice(10770L)
@@ -106,7 +106,7 @@ public abstract class ITFeesMargin {
             container.validateUserState(UID_1, profile -> {
                 assertThat(profile.getAccounts().get(CURRENECY_JPY), is(240_000L - makerFee * 30));
                 assertThat(profile.getAccounts().get(CURRENECY_USD), is(0L));
-                assertThat(profile.getPositions().get(symbolId).direction, is(PositionDirection.SHORT));
+                assertThat(profile.getPositions().get(symbolId).direction, is(OrderDirection.SHORT));
                 assertThat(profile.getPositions().get(symbolId).openVolume, is(30L));
                 assertThat(profile.getPositions().get(symbolId).pendingBuySize, is(0L));
                 assertThat(profile.getPositions().get(symbolId).pendingSellSize, is(10L));
@@ -117,7 +117,7 @@ public abstract class ITFeesMargin {
             container.validateUserState(UID_2, profile -> {
                 assertThat(profile.getAccounts().get(CURRENECY_JPY), is(150_000L - takerFee * 30));
                 assertThat(profile.getAccounts().get(CURRENECY_USD), is(0L));
-                assertThat(profile.getPositions().get(symbolId).direction, is(PositionDirection.LONG));
+                assertThat(profile.getPositions().get(symbolId).direction, is(OrderDirection.LONG));
                 assertThat(profile.getPositions().get(symbolId).openVolume, is(30L));
                 assertThat(profile.getPositions().get(symbolId).pendingBuySize, is(0L));
                 assertThat(profile.getPositions().get(symbolId).pendingSellSize, is(0L));
@@ -146,7 +146,7 @@ public abstract class ITFeesMargin {
             container.createUserWithMoney(UID_1, CURRENECY_JPY, jpyAmount1);
 
             final ApiPlaceOrder order101 = ApiPlaceOrder.builder()
-                    .uid(UID_1)
+                    .uuid(UID_1)
                     .orderId(101L)
                     .price(10770L)
                     .reservePrice(0L)
@@ -176,7 +176,7 @@ public abstract class ITFeesMargin {
             assertThat(totalBal1.getOpenInterestLong().get(symbolId), is(0L));
 
             final ApiPlaceOrder order102 = ApiPlaceOrder.builder()
-                    .uid(UID_2)
+                    .uuid(UID_2)
                     .orderId(102)
                     .price(10770L)
                     .reservePrice(10770L)
@@ -192,7 +192,7 @@ public abstract class ITFeesMargin {
             container.validateUserState(UID_1, profile -> {
                 assertThat(profile.getAccounts().get(CURRENECY_JPY), is(250_000L - makerFee * 30));
                 assertThat(profile.getAccounts().get(CURRENECY_USD), is(0L));
-                assertThat(profile.getPositions().get(symbolId).direction, is(PositionDirection.LONG));
+                assertThat(profile.getPositions().get(symbolId).direction, is(OrderDirection.LONG));
                 assertThat(profile.getPositions().get(symbolId).openVolume, is(30L));
                 assertThat(profile.getPositions().get(symbolId).pendingBuySize, is(20L));
                 assertThat(profile.getPositions().get(symbolId).pendingSellSize, is(0L));
@@ -203,7 +203,7 @@ public abstract class ITFeesMargin {
             container.validateUserState(UID_2, profile -> {
                 assertThat(profile.getAccounts().get(CURRENECY_JPY), is(200_000L - takerFee * 30));
                 assertThat(profile.getAccounts().get(CURRENECY_USD), is(0L));
-                assertThat(profile.getPositions().get(symbolId).direction, is(PositionDirection.SHORT));
+                assertThat(profile.getPositions().get(symbolId).direction, is(OrderDirection.SHORT));
                 assertThat(profile.getPositions().get(symbolId).openVolume, is(30L));
                 assertThat(profile.getPositions().get(symbolId).pendingBuySize, is(0L));
                 assertThat(profile.getPositions().get(symbolId).pendingSellSize, is(0L));
@@ -233,7 +233,7 @@ public abstract class ITFeesMargin {
             container.createUserWithMoney(UID_1, CURRENECY_JPY, jpyAmount1);
 
             final ApiPlaceOrder order101 = ApiPlaceOrder.builder()
-                    .uid(UID_1)
+                    .uuid(UID_1)
                     .orderId(101L)
                     .price(10770L)
                     .reservePrice(0L)
@@ -256,7 +256,7 @@ public abstract class ITFeesMargin {
             container.validateUserState(UID_1, profile -> {
                 assertThat(profile.getAccounts().get(CURRENECY_JPY), is(240_000L));
                 assertThat(profile.getAccounts().get(CURRENECY_USD), is(0L));
-                assertThat(profile.getPositions().get(symbolId).direction, is(PositionDirection.EMPTY));
+                assertThat(profile.getPositions().get(symbolId).direction, is(OrderDirection.EMPTY));
                 assertThat(profile.getPositions().get(symbolId).openVolume, is(0L));
                 assertThat(profile.getPositions().get(symbolId).pendingBuySize, is(0L));
                 assertThat(profile.getPositions().get(symbolId).pendingSellSize, is(40L));
@@ -266,7 +266,7 @@ public abstract class ITFeesMargin {
 
             // cancel
             container.submitCommandSync(
-                    ApiCancelOrder.builder().orderId(101L).uid(UID_1).symbol(symbolId).build(),
+                    ApiCancelOrder.builder().orderId(101L).uuid(UID_1).symbol(symbolId).build(),
                     CommandResultCode.SUCCESS);
 
             // verify balance

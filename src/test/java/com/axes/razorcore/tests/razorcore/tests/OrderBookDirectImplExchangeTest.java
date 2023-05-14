@@ -22,9 +22,7 @@ import com.axes.razorcore.orderbook.OrderBookDirectImpl;
 import com.axes.razorcore.orderbook.OrderBookEventsHelper;
 import com.axes.razorcore.tests.test.util.TestConstants;
 import exchange.core2.collections.objpool.ObjectsPool;
-import exchange.core2.core.common.CoreSymbolSpecification;
-import exchange.core2.core.common.config.LoggingConfiguration;
-import exchange.core2.tests.util.TestConstants;
+
 
 public final class OrderBookDirectImplExchangeTest extends OrderBookDirectImplTest {
 

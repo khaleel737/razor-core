@@ -15,12 +15,13 @@
  */
 package com.axes.razorcore.tests.razorcore.tests;
 
+import com.axes.razorcore.config.LoggingConfiguration;
+import com.axes.razorcore.core.SymbolSpecification;
 import com.axes.razorcore.orderbook.IOrderBook;
+import com.axes.razorcore.orderbook.OrderBookDirectImpl;
 import com.axes.razorcore.orderbook.OrderBookEventsHelper;
+import com.axes.razorcore.tests.test.util.TestConstants;
 import exchange.core2.collections.objpool.ObjectsPool;
-import exchange.core2.core.common.CoreSymbolSpecification;
-import exchange.core2.core.common.config.LoggingConfiguration;
-import exchange.core2.tests.util.TestConstants;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,7 +37,7 @@ public final class OrderBookDirectImplMarginTest extends OrderBookDirectImplTest
     }
 
     @Override
-    protected CoreSymbolSpecification getCoreSymbolSpec() {
+    protected SymbolSpecification getCoreSymbolSpec() {
         return TestConstants.SYMBOLSPEC_EUR_USD;
     }
 

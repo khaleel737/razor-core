@@ -15,20 +15,20 @@
  */
 package com.axes.razorcore.tests.test.util;
 
+import com.axes.razorcore.RazorCore;
+import com.axes.razorcore.RazorCoreApi;
+import com.axes.razorcore.config.*;
+import com.axes.razorcore.core.SymbolSpecification;
+import com.axes.razorcore.core.SymbolType;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.OrderCommand;
+import com.axes.razorcore.cqrs.command.*;
+import com.axes.razorcore.cqrs.command.binary.BatchAddSymbolsCommand;
+import com.axes.razorcore.cqrs.command.binary.BinaryDataCommand;
+import com.axes.razorcore.cqrs.query.*;
+import com.axes.razorcore.data.L2MarketData;
+import com.axes.razorcore.utils.AffinityThreadFactory;
 import com.google.common.collect.Lists;
-import exchange.core2.core.ExchangeApi;
-import exchange.core2.core.ExchangeCore;
-import exchange.core2.core.common.CoreSymbolSpecification;
-import exchange.core2.core.common.L2MarketData;
-import exchange.core2.core.common.SymbolType;
-import exchange.core2.core.common.api.*;
-import exchange.core2.core.common.api.binary.BatchAddSymbolsCommand;
-import exchange.core2.core.common.api.binary.BinaryDataCommand;
-import exchange.core2.core.common.api.reports.*;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.cmd.OrderCommand;
-import exchange.core2.core.common.config.*;
-import exchange.core2.core.utils.AffinityThreadFactory;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -47,16 +47,17 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 public final class ExchangeTestContainer implements AutoCloseable {
 
-    private final ExchangeCore exchangeCore;
+    private final RazorCore exchangeCore;
 
     @Getter
-    private final ExchangeApi api;
+    private final RazorCoreApi api;
 
     @Getter
     private final AffinityThreadFactory threadFactory;
@@ -88,7 +89,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
 
     public static TestDataFutures prepareTestDataAsync(TestDataParameters parameters, int seed) {
 
-        final CompletableFuture<List<CoreSymbolSpecification>> coreSymbolSpecificationsFuture = CompletableFuture.supplyAsync(
+        final CompletableFuture<List<SymbolSpecification>> coreSymbolSpecificationsFuture = CompletableFuture.supplyAsync(
                 () -> ExchangeTestContainer.generateRandomSymbols(parameters.numSymbols, parameters.currenciesAllowed, parameters.allowedSymbolTypes));
 
         final CompletableFuture<List<BitSet>> usersAccountsFuture = CompletableFuture.supplyAsync(
@@ -117,7 +118,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
     @Data
     @Builder
     public static class TestDataFutures {
-        final CompletableFuture<List<CoreSymbolSpecification>> coreSymbolSpecifications;
+        final CompletableFuture<List<SymbolSpecification>> coreSymbolSpecifications;
         final CompletableFuture<List<BitSet>> usersAccounts;
         final CompletableFuture<TestOrdersGenerator.MultiSymbolGenResult> genResult;
     }
@@ -130,7 +131,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
 
         this.threadFactory = new AffinityThreadFactory(AffinityThreadFactory.ThreadAffinityMode.THREAD_AFFINITY_ENABLE_PER_PHYSICAL_CORE);
 
-        final ExchangeConfiguration exchangeConfiguration = ExchangeConfiguration.defaultBuilder()
+        final ApplicationConfig exchangeConfiguration = ApplicationConfig.defaultBuilder()
                 .initStateCfg(initStateCfg)
                 .performanceCfg(perfCfg)
                 .reportsQueriesCfg(ReportsQueriesConfiguration.createStandardConfig())
@@ -139,7 +140,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
                 .serializationCfg(serializationCfg)
                 .build();
 
-        this.exchangeCore = ExchangeCore.builder()
+        this.exchangeCore = RazorCore.builder()
                 .resultsConsumer((cmd, seq) -> consumer.accept(cmd, seq))
                 .exchangeConfiguration(exchangeConfiguration)
                 .build();
@@ -176,40 +177,40 @@ public final class ExchangeTestContainer implements AutoCloseable {
         initFeeUser(TestConstants.UID_4);
     }
 
-    public void initBasicUser(long uid) {
-        assertThat(api.submitCommandAsync(ApiAddUser.builder().uid(uid).build()).join(), Is.is(CommandResultCode.SUCCESS));
-        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uid(uid).transactionId(1L).amount(10_000_00L).currency(TestConstants.CURRENECY_USD).build()).join(), Is.is(CommandResultCode.SUCCESS));
-        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uid(uid).transactionId(2L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_XBT).build()).join(), Is.is(CommandResultCode.SUCCESS));
-        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uid(uid).transactionId(3L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_ETH).build()).join(), Is.is(CommandResultCode.SUCCESS));
+    public void initBasicUser(long uuid) {
+        assertThat(api.submitCommandAsync(ApiAddUser.builder().uuid(uuid).build()).join(), Is.is(CommandResultCode.SUCCESS));
+        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(1L).amount(10_000_00L).currency(TestConstants.CURRENECY_USD).build()).join(), Is.is(CommandResultCode.SUCCESS));
+        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(2L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_XBT).build()).join(), Is.is(CommandResultCode.SUCCESS));
+        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(3L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_ETH).build()).join(), Is.is(CommandResultCode.SUCCESS));
     }
 
-    public void initFeeUser(long uid) {
-        assertThat(api.submitCommandAsync(ApiAddUser.builder().uid(uid).build()).join(), Is.is(CommandResultCode.SUCCESS));
-        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uid(uid).transactionId(1L).amount(10_000_00L).currency(TestConstants.CURRENECY_USD).build()).join(), Is.is(CommandResultCode.SUCCESS));
-        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uid(uid).transactionId(2L).amount(10_000_000L).currency(TestConstants.CURRENECY_JPY).build()).join(), Is.is(CommandResultCode.SUCCESS));
-        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uid(uid).transactionId(3L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_XBT).build()).join(), Is.is(CommandResultCode.SUCCESS));
-        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uid(uid).transactionId(4L).amount(1000_0000_0000L).currency(TestConstants.CURRENECY_LTC).build()).join(), Is.is(CommandResultCode.SUCCESS));
+    public void initFeeUser(long uuid) {
+        assertThat(api.submitCommandAsync(ApiAddUser.builder().uuid(uuid).build()).join(), Is.is(CommandResultCode.SUCCESS));
+        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(1L).amount(10_000_00L).currency(TestConstants.CURRENECY_USD).build()).join(), Is.is(CommandResultCode.SUCCESS));
+        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(2L).amount(10_000_000L).currency(TestConstants.CURRENECY_JPY).build()).join(), Is.is(CommandResultCode.SUCCESS));
+        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(3L).amount(1_0000_0000L).currency(TestConstants.CURRENECY_XBT).build()).join(), Is.is(CommandResultCode.SUCCESS));
+        assertThat(api.submitCommandAsync(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(4L).amount(1000_0000_0000L).currency(TestConstants.CURRENECY_LTC).build()).join(), Is.is(CommandResultCode.SUCCESS));
     }
 
-    public void createUserWithMoney(long uid, int currency, long amount) {
+    public void createUserWithMoney(long uuid, int currency, long amount) {
         final List<ApiCommand> cmds = new ArrayList<>();
-        cmds.add(ApiAddUser.builder().uid(uid).build());
-        cmds.add(ApiAdjustUserBalance.builder().uid(uid).transactionId(getRandomTransactionId()).amount(amount).currency(currency).build());
+        cmds.add(ApiAddUser.builder().uuid(uuid).build());
+        cmds.add(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(getRandomTransactionId()).amount(amount).currency(currency).build());
         api.submitCommandsSync(cmds);
     }
 
-    public void addMoneyToUser(long uid, int currency, long amount) {
+    public void addMoneyToUser(long uuid, int currency, long amount) {
         final List<ApiCommand> cmds = new ArrayList<>();
-        cmds.add(ApiAdjustUserBalance.builder().uid(uid).transactionId(getRandomTransactionId()).amount(amount).currency(currency).build());
+        cmds.add(ApiAdjustUserBalance.builder().uuid(uuid).transactionId(getRandomTransactionId()).amount(amount).currency(currency).build());
         api.submitCommandsSync(cmds);
     }
 
 
-    public void addSymbol(final CoreSymbolSpecification symbol) {
+    public void addSymbol(final SymbolSpecification symbol) {
         sendBinaryDataCommandSync(new BatchAddSymbolsCommand(symbol), 5000);
     }
 
-    public void addSymbols(final List<CoreSymbolSpecification> symbols) {
+    public void addSymbols(final List<SymbolSpecification> symbols) {
         // split by chunks
         Lists.partition(symbols, 10000).forEach(partition -> sendBinaryDataCommandSync(new BatchAddSymbolsCommand(partition), 5000));
     }
@@ -248,11 +249,11 @@ public final class ExchangeTestContainer implements AutoCloseable {
     private void createUserAccountsRegular(List<BitSet> userCurrencies, IntLongHashMap amountPerAccount) {
         final int numUsers = userCurrencies.size() - 1;
 
-        IntStream.rangeClosed(1, numUsers).forEach(uid -> {
-            api.submitCommand(ApiAddUser.builder().uid(uid).build());
-            userCurrencies.get(uid).stream().forEach(currency ->
+        IntStream.rangeClosed(1, numUsers).forEach(uuid -> {
+            api.submitCommand(ApiAddUser.builder().uuid(uuid).build());
+            userCurrencies.get(uuid).stream().forEach(currency ->
                     api.submitCommand(ApiAdjustUserBalance.builder()
-                            .uid(uid)
+                            .uuid(uuid)
                             .transactionId(getRandomTransactionId())
                             .amount(amountPerAccount.get(currency))
                             .currency(currency)
@@ -265,12 +266,12 @@ public final class ExchangeTestContainer implements AutoCloseable {
     public void usersInit(int numUsers, Set<Integer> currencies) {
 
         LongStream.rangeClosed(1, numUsers)
-                .forEach(uid -> {
-                    api.submitCommand(ApiAddUser.builder().uid(uid).build());
+                .forEach(uuid -> {
+                    api.submitCommand(ApiAddUser.builder().uuid(uuid).build());
                     long transactionId = 1L;
                     for (int currency : currencies) {
                         api.submitCommand(ApiAdjustUserBalance.builder()
-                                .uid(uid)
+                                .uuid(uuid)
                                 .transactionId(transactionId++)
                                 .amount(10_0000_0000L)
                                 .currency(currency).build());
@@ -298,8 +299,8 @@ public final class ExchangeTestContainer implements AutoCloseable {
     }
 
     // todo rename
-    public void validateUserState(long uid, Consumer<SingleUserReportResult> resultValidator) throws InterruptedException, ExecutionException {
-        resultValidator.accept(getUserProfile(uid));
+    public void validateUserState(long uuid, Consumer<SingleUserReportResult> resultValidator) throws InterruptedException, ExecutionException {
+        resultValidator.accept(getUserProfile(uuid));
     }
 
     public SingleUserReportResult getUserProfile(long clientId) throws InterruptedException, ExecutionException {
@@ -323,7 +324,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
         return api.processReport(new StateHashReportQuery(), getRandomTransferId()).get().getStateHash();
     }
 
-    public static List<CoreSymbolSpecification> generateRandomSymbols(final int num,
+    public static List<SymbolSpecification> generateRandomSymbols(final int num,
                                                                       final Collection<Integer> currenciesAllowed,
                                                                       final AllowedSymbolTypes allowedSymbolTypes) {
         final Random random = new Random(1L);
@@ -332,21 +333,21 @@ public final class ExchangeTestContainer implements AutoCloseable {
 
         switch (allowedSymbolTypes) {
             case FUTURES_CONTRACT:
-                symbolTypeSupplier = () -> SymbolType.FUTURES_CONTRACT;
+                symbolTypeSupplier = () -> SymbolType.FUTURES_CONTRACTS;
                 break;
 
             case CURRENCY_EXCHANGE_PAIR:
-                symbolTypeSupplier = () -> SymbolType.CURRENCY_EXCHANGE_PAIR;
+                symbolTypeSupplier = () -> SymbolType.CURRENCY_EXCHANGE_PAIRS;
                 break;
 
             case BOTH:
             default:
-                symbolTypeSupplier = () -> random.nextBoolean() ? SymbolType.FUTURES_CONTRACT : SymbolType.CURRENCY_EXCHANGE_PAIR;
+                symbolTypeSupplier = () -> random.nextBoolean() ? SymbolType.FUTURES_CONTRACTS : SymbolType.CURRENCY_EXCHANGE_PAIRS;
                 break;
         }
 
         final List<Integer> currencies = new ArrayList<>(currenciesAllowed);
-        final List<CoreSymbolSpecification> result = new ArrayList<>();
+        final List<SymbolSpecification> result = new ArrayList<>();
         for (int i = 0; i < num; ) {
             int baseCurrency = currencies.get(random.nextInt(currencies.size()));
             int quoteCurrency = currencies.get(random.nextInt(currencies.size()));
@@ -354,7 +355,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
                 final SymbolType type = symbolTypeSupplier.get();
                 final long makerFee = random.nextInt(1000);
                 final long takerFee = makerFee + random.nextInt(500);
-                final CoreSymbolSpecification symbol = CoreSymbolSpecification.builder()
+                final SymbolSpecification symbol = SymbolSpecification.builder()
                         .symbolId(TestConstants.SYMBOL_AUTOGENERATED_RANGE_START + i)
                         .type(type)
                         .baseCurrency(baseCurrency) // TODO for futures can be any value
@@ -377,7 +378,7 @@ public final class ExchangeTestContainer implements AutoCloseable {
     public void loadSymbolsUsersAndPrefillOrders(TestDataFutures testDataFutures) {
 
         // load symbols
-        final List<CoreSymbolSpecification> coreSymbolSpecifications = testDataFutures.coreSymbolSpecifications.join();
+        final List<SymbolSpecification> coreSymbolSpecifications = testDataFutures.coreSymbolSpecifications.join();
         log.info("Loading {} symbols...", coreSymbolSpecifications.size());
         try (ExecutionTime ignore = new ExecutionTime(t -> log.debug("Loaded all symbols in {}", t))) {
             addSymbols(coreSymbolSpecifications);

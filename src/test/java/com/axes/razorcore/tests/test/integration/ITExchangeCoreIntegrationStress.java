@@ -15,13 +15,13 @@
  */
 package com.axes.razorcore.tests.test.integration;
 
-import exchange.core2.core.ExchangeApi;
-import exchange.core2.core.common.CoreSymbolSpecification;
-import exchange.core2.core.common.L2MarketData;
-import exchange.core2.core.common.api.ApiCommand;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.ExchangeTestContainer;
-import exchange.core2.tests.util.TestOrdersGenerator;
+import com.axes.razorcore.RazorCoreApi;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.core.SymbolSpecification;
+import com.axes.razorcore.cqrs.command.ApiCommand;
+import com.axes.razorcore.data.L2MarketData;
+import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
+import com.axes.razorcore.tests.test.util.TestOrdersGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.impl.map.mutable.primitive.IntLongHashMap;
 import org.junit.jupiter.api.Test;
@@ -34,8 +34,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static exchange.core2.tests.util.TestConstants.SYMBOLSPEC_ETH_XBT;
-import static exchange.core2.tests.util.TestConstants.SYMBOLSPEC_EUR_USD;
+import static com.axes.razorcore.tests.test.util.TestConstants.SYMBOLSPEC_ETH_XBT;
+import static com.axes.razorcore.tests.test.util.TestConstants.SYMBOLSPEC_EUR_USD;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
@@ -61,11 +61,11 @@ public abstract class ITExchangeCoreIntegrationStress {
         manyOperations(SYMBOLSPEC_ETH_XBT);
     }
 
-    public void manyOperations(final CoreSymbolSpecification symbolSpec) throws Exception {
+    public void manyOperations(final SymbolSpecification symbolSpec) throws Exception {
         try (final ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration())) {
             container.initBasicSymbols();
             //container.initBasicUsers();
-            final ExchangeApi api = container.getApi();
+            final RazorCoreApi api = container.getApi();
 
             int numOrders = 1_000_000;
             int targetOrderBookOrders = 1000;

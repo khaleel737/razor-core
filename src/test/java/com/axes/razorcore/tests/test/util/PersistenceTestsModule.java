@@ -15,12 +15,12 @@
  */
 package com.axes.razorcore.tests.test.util;
 
-import exchange.core2.core.common.api.ApiCommand;
-import exchange.core2.core.common.api.ApiPersistState;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.config.InitialStateConfiguration;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.core.common.config.SerializationConfiguration;
+import com.axes.razorcore.config.InitialStateConfiguration;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.config.SerializationConfiguration;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.command.ApiCommand;
+import com.axes.razorcore.cqrs.command.ApiPersistState;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.Is;
 
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

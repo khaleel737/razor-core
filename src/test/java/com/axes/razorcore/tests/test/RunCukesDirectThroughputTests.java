@@ -1,7 +1,7 @@
 package com.axes.razorcore.tests.test;
 
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.steps.OrderStepdefs;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.tests.test.steps.OrderStepdefs;
 import io.cucumber.plugin.EventListener;
 import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestRunFinished;

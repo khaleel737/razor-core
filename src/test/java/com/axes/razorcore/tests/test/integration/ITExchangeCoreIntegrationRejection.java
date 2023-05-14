@@ -15,15 +15,15 @@
  */
 package com.axes.razorcore.tests.test.integration;
 
-import exchange.core2.core.IEventsHandler;
-import exchange.core2.core.SimpleEventsProcessor;
-import exchange.core2.core.common.CoreSymbolSpecification;
-import exchange.core2.core.common.OrderAction;
-import exchange.core2.core.common.OrderType;
-import exchange.core2.core.common.api.ApiPlaceOrder;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.ExchangeTestContainer;
+import com.axes.razorcore.IEventsHandler;
+import com.axes.razorcore.SimpleEventsProcessor;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.core.OrderAction;
+import com.axes.razorcore.core.OrderType;
+import com.axes.razorcore.core.SymbolSpecification;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.command.ApiPlaceOrder;
+import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,12 +37,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static com.axes.razorcore.core.OrderAction.ASK;
+import static com.axes.razorcore.core.OrderAction.BID;
+import static com.axes.razorcore.core.OrderType.*;
 import static com.axes.razorcore.tests.test.integration.ITExchangeCoreIntegrationRejection.RejectionCause.*;
-import static exchange.core2.core.common.OrderAction.ASK;
-import static exchange.core2.core.common.OrderAction.BID;
-import static exchange.core2.core.common.OrderType.*;
-import static exchange.core2.tests.integration.ITExchangeCoreIntegrationRejection.RejectionCause.*;
-import static exchange.core2.tests.util.TestConstants.*;
+import static com.axes.razorcore.tests.test.util.TestConstants.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -254,11 +253,11 @@ public abstract class ITExchangeCoreIntegrationRejection {
     // ------------------------------------------------------------------------------
 
     private ApiPlaceOrder.ApiPlaceOrderBuilder builderPlace(int symbolId, long uid, OrderAction action, OrderType type) {
-        return ApiPlaceOrder.builder().uid(uid).action(action).orderType(type).symbol(symbolId);
+        return ApiPlaceOrder.builder().uuid(uid).action(action).orderType(type).symbol(symbolId);
     }
 
     // TODO count/verify number of commands and events
-    private void testMultiBuy(final CoreSymbolSpecification symbolSpec, final OrderType orderType, final RejectionCause rejectionCause) {
+    private void testMultiBuy(final SymbolSpecification symbolSpec, final OrderType orderType, final RejectionCause rejectionCause) {
 
         final int symbolId = symbolSpec.symbolId;
 
@@ -302,7 +301,7 @@ public abstract class ITExchangeCoreIntegrationRejection {
             assertThat(tradeEvent.getTotalVolume(), Is.is(40L));
             assertThat(tradeEvent.getTakerOrderId(), Is.is(405L));
             assertThat(tradeEvent.getTakerUid(), Is.is(UID_4));
-            assertThat(tradeEvent.getTakerAction(), Is.is(OrderAction.BID));
+            assertThat(tradeEvent.getTakerAction(), Is.is(BID));
             assertThat(tradeEvent.isTakeOrderCompleted(), Is.is(rejectionCause == NO_REJECTION)); // completed only if no rejection was happened
 
             final List<IEventsHandler.Trade> trades = tradeEvent.getTrades();
@@ -346,7 +345,7 @@ public abstract class ITExchangeCoreIntegrationRejection {
 
     }
 
-    private void testMultiSell(final CoreSymbolSpecification symbolSpec, final OrderType orderType, final RejectionCause rejectionCause) {
+    private void testMultiSell(final SymbolSpecification symbolSpec, final OrderType orderType, final RejectionCause rejectionCause) {
 
         final int symbolId = symbolSpec.symbolId;
 

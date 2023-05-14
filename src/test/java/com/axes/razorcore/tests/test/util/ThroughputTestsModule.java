@@ -15,9 +15,9 @@
  */
 package com.axes.razorcore.tests.test.util;
 
-import exchange.core2.core.common.config.InitialStateConfiguration;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.core.common.config.SerializationConfiguration;
+import com.axes.razorcore.config.InitialStateConfiguration;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.config.SerializationConfiguration;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.stream.IntStream;

@@ -1,6 +1,6 @@
 package com.axes.razorcore.tests.test.integration;
 
-import exchange.core2.core.common.config.PerformanceConfiguration;
+import com.axes.razorcore.config.PerformanceConfiguration;
 
 public final class ITExchangeCoreIntegrationLatency extends ITExchangeCoreIntegration {
 

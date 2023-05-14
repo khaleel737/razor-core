@@ -35,8 +35,10 @@ public OrderAction action;
 public OrderType orderType;
 @Getter
 public long uuid;
+
 @Getter
 public long timestamp;
+
 public int userCookies;
 public long eventsGroup;
 public int serviceFlags;

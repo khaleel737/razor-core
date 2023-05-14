@@ -15,10 +15,11 @@
  */
 package com.axes.razorcore.tests.razorcore.tests;
 
+import com.axes.razorcore.config.LoggingConfiguration;
+import com.axes.razorcore.core.SymbolSpecification;
 import com.axes.razorcore.orderbook.IOrderBook;
-import exchange.core2.core.common.CoreSymbolSpecification;
-import exchange.core2.core.common.config.LoggingConfiguration;
-import exchange.core2.tests.util.TestConstants;
+import com.axes.razorcore.orderbook.OrderBookNaiveImpl;
+import com.axes.razorcore.tests.test.util.TestConstants;
 
 public final class OrderBookNaiveImplExchangeTest extends OrderBookBaseTest {
 
@@ -28,7 +29,7 @@ public final class OrderBookNaiveImplExchangeTest extends OrderBookBaseTest {
     }
 
     @Override
-    protected CoreSymbolSpecification getCoreSymbolSpec() {
+    protected SymbolSpecification getCoreSymbolSpec() {
         return TestConstants.SYMBOLSPEC_ETH_XBT;
     }
 

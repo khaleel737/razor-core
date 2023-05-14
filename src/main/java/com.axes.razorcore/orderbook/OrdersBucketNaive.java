@@ -57,7 +57,7 @@ public class OrdersBucketNaive implements Comparable<OrdersBucketNaive>, WriteBy
     public Order remove(long orderId, long uid) {
         Order order = entries.get(orderId);
 //        log.debug("removing order: {}", order);
-        if (order == null || order.uid != uid) {
+        if (order == null || order.uuid != uid) {
             return null;
         }
 
@@ -208,7 +208,7 @@ public class OrdersBucketNaive implements Comparable<OrdersBucketNaive>, WriteBy
         if (obj == this) return true;
         if (obj == null) return false;
         if (!(obj instanceof OrdersBucketNaive)) return false;
-        OrdersBucketNaive other = (OrdersBucketNaive) o;
+        OrdersBucketNaive other = (OrdersBucketNaive) obj;
         return price == other.getPrice()
                 && getAllOrders().equals(other.getAllOrders());
     }

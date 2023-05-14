@@ -1,6 +1,5 @@
 package com.axes.razorcore.core;
 
-import com.axes.razorcore.data.Instant;
 import com.axes.razorcore.utils.StateHash;
 
 public interface IOrder extends StateHash {
@@ -11,7 +10,7 @@ public interface IOrder extends StateHash {
     long getUuid();
     OrderAction getAction();
     long getOrderId();
-    Instant getTimestamp();
+    long getTimestamp();
     long getReserveBidPrice();
 
 }

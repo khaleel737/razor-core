@@ -1,14 +1,17 @@
 package com.axes.razorcore.tests.test.steps;
 
-import exchange.core2.core.common.*;
-import exchange.core2.core.common.api.*;
-import exchange.core2.core.common.api.reports.SingleUserReportResult;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.cmd.OrderCommandType;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.ExchangeTestContainer;
-import exchange.core2.tests.util.L2MarketDataHelper;
-import exchange.core2.tests.util.TestConstants;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.core.OrderAction;
+import com.axes.razorcore.core.OrderType;
+import com.axes.razorcore.core.SymbolSpecification;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.OrderCommandType;
+import com.axes.razorcore.cqrs.command.*;
+import com.axes.razorcore.cqrs.query.SingleUserReportResult;
+import com.axes.razorcore.event.MatchTradeEventHandler;
+import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
+import com.axes.razorcore.tests.test.util.L2MarketDataHelper;
+import com.axes.razorcore.tests.test.util.TestConstants;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java8.En;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static exchange.core2.tests.util.ExchangeTestContainer.CHECK_SUCCESS;
-import static exchange.core2.tests.util.TestConstants.SYMBOLSPEC_ETH_XBT;
-import static exchange.core2.tests.util.TestConstants.SYMBOLSPEC_EUR_USD;
+import static com.axes.razorcore.tests.test.util.TestConstants.SYMBOLSPEC_EUR_USD;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,10 +36,10 @@ public class OrderStepdefs implements En {
 
     private ExchangeTestContainer container = null;
 
-    private List<MatcherTradeEvent> matcherEvents;
+    private List<MatchTradeEventHandler> matcherEvents;
     private Map<Long, ApiPlaceOrder> orders = new HashMap<>();
 
-    final Map<String, CoreSymbolSpecification> symbolSpecificationMap = new HashMap<>();
+    final Map<String, SymbolSpecification> symbolSpecificationMap = new HashMap<>();
     final Map<String, Long> users = new HashMap<>();
 
     @BeforeEach

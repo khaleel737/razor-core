@@ -19,6 +19,9 @@ public class UserProfileService implements WriteBytesMarshallable, StateHash {
     @Getter
     private final LongObjectHashMap<UserProfile> userProfiles;
 
+    public UserProfileService() {
+        this.userProfiles = new LongObjectHashMap<>(1024);
+    }
     public UserProfileService(BytesIn bytes) {
         this.userProfiles = SerializationUtils.readLongHashMap(bytes, UserProfile::new);
     }

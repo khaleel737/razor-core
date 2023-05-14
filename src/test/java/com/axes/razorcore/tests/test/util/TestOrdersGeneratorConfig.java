@@ -15,7 +15,7 @@
  */
 package com.axes.razorcore.tests.test.util;
 
-import exchange.core2.core.common.CoreSymbolSpecification;
+import com.axes.razorcore.core.SymbolSpecification;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,7 +29,7 @@ import java.util.function.Function;
 @Getter
 public class TestOrdersGeneratorConfig {
 
-    final List<CoreSymbolSpecification> coreSymbolSpecifications;
+    final List<SymbolSpecification> coreSymbolSpecifications;
     final int totalTransactionsNumber;
     final List<BitSet> usersAccounts;
     final int targetOrderBookOrdersTotal;

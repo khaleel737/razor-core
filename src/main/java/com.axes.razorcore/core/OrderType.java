@@ -1,5 +1,8 @@
 package com.axes.razorcore.core;
 
+import lombok.Getter;
+
+@Getter
 public enum OrderType {
     GTC(0),
     DAY(1),

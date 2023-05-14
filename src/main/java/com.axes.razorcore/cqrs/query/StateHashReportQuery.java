@@ -15,9 +15,9 @@
  */
 package com.axes.razorcore.cqrs.query;
 
-import exchange.core2.core.processors.MatchingEngineRouter;
-import exchange.core2.core.processors.RiskEngine;
-import exchange.core2.core.utils.HashingUtils;
+import com.axes.razorcore.service.MatchingEngineRouter;
+import com.axes.razorcore.service.RiskEngine;
+import com.axes.razorcore.utils.HashingUtils;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;

@@ -8,7 +8,6 @@ import com.axes.razorcore.data.L2MarketData;
 import com.axes.razorcore.event.MatchTradeEventHandler;
 import com.axes.razorcore.utils.SerializationUtils;
 import exchange.core2.collections.objpool.ObjectsPool;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.bytes.BytesIn;
 import net.openhft.chronicle.bytes.BytesOut;
@@ -183,7 +182,7 @@ public class OrderBookNaiveImpl implements IOrderBook {
                 return Optional.of(result);
             }
         }
-        if (logDebug) log.debug("not enough liquidity to fill size={}", size);
+        if (logDebug) log.debug("not enough liquuidity to fill size={}", size);
         return Optional.empty();
     }
 
@@ -275,7 +274,7 @@ public class OrderBookNaiveImpl implements IOrderBook {
         final long orderId = command.orderId;
 
         final Order order = idMap.get(orderId);
-        if (order == null || order.uid != command.uid) {
+        if (order == null || order.uuid != command.uuid) {
             // order already matched and removed from order book previously
             return CommandResultCode.MATCHING_UNKNOWN_ORDER_ID;
         }
@@ -292,7 +291,7 @@ public class OrderBookNaiveImpl implements IOrderBook {
         }
 
         // remove order and whole bucket if its empty
-        ordersBucket.remove(orderId, command.uid);
+        ordersBucket.remove(orderId, command.uuid);
         if (ordersBucket.getTotalVolume() == 0) {
             buckets.remove(price);
         }
@@ -316,7 +315,7 @@ public class OrderBookNaiveImpl implements IOrderBook {
         }
 
         final Order order = idMap.get(orderId);
-        if (order == null || order.uid != command.uid) {
+        if (order == null || order.uuid != command.uuid) {
             // already matched, moved or cancelled
             return CommandResultCode.MATCHING_UNKNOWN_ORDER_ID;
         }
@@ -339,7 +338,7 @@ public class OrderBookNaiveImpl implements IOrderBook {
             idMap.remove(orderId);
 
             // canRemove order and whole bucket if it is empty
-            ordersBucket.remove(orderId, command.uid);
+            ordersBucket.remove(orderId, command.uuid);
             if (ordersBucket.getTotalVolume() == 0) {
                 buckets.remove(order.price);
             }

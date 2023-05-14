@@ -15,16 +15,16 @@
  */
 package com.axes.razorcore.tests.test.util;
 
-import exchange.core2.core.ExchangeApi;
-import exchange.core2.core.common.MatcherTradeEvent;
-import exchange.core2.core.common.OrderType;
-import exchange.core2.core.common.api.ApiCommand;
-import exchange.core2.core.common.api.ApiMoveOrder;
-import exchange.core2.core.common.api.ApiPlaceOrder;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.config.InitialStateConfiguration;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.core.common.config.SerializationConfiguration;
+import com.axes.razorcore.RazorCoreApi;
+import com.axes.razorcore.config.InitialStateConfiguration;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.config.SerializationConfiguration;
+import com.axes.razorcore.core.OrderType;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.command.ApiCommand;
+import com.axes.razorcore.cqrs.command.ApiMoveOrder;
+import com.axes.razorcore.cqrs.command.ApiPlaceOrder;
+import com.axes.razorcore.event.MatchTradeEventHandler;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.HdrHistogram.Histogram;
@@ -70,7 +70,7 @@ public class LatencyTestsModule {
 
         try (final ExchangeTestContainer container = ExchangeTestContainer.create(performanceCfg, initialStateCfg, serializationCfg)) {
 
-            final ExchangeApi api = container.getApi();
+            final RazorCoreApi api = container.getApi();
             final SingleWriterRecorder hdrRecorder = new SingleWriterRecorder(Integer.MAX_VALUE, 2);
 
             // TODO - first run should validate the output (orders are accepted and processed properly)
@@ -170,7 +170,7 @@ public class LatencyTestsModule {
             final Function<Integer, Boolean> testIteration = (step) -> {
 
                 try {
-                    final ExchangeApi api = container.getApi();
+                    final RazorCoreApi api = container.getApi();
 
                     container.loadSymbolsUsersAndPrefillOrdersNoLog(testDataFutures);
 
@@ -193,9 +193,9 @@ public class LatencyTestsModule {
                         latencies[i] = (int) lat;
 
 
-                        MatcherTradeEvent matcherEvent = cmd.matcherEvent;
+                        MatchTradeEventHandler matcherEvent = cmd.matchTradeEventHandler;
                         while (matcherEvent != null) {
-                            matcherEvent = matcherEvent.nextEvent;
+                            matcherEvent = matcherEvent.matchTradeNextEvent;
                             matcherEvents[i]++;
                         }
 
@@ -324,7 +324,7 @@ public class LatencyTestsModule {
 
         try (final ExchangeTestContainer container = ExchangeTestContainer.create(performanceConfiguration, initialStateConfiguration, SerializationConfiguration.DEFAULT)) {
 
-            final ExchangeApi api = container.getApi();
+            final RazorCoreApi api = container.getApi();
 
             final IntFunction<TreeMap<ZonedDateTime, Long>> testIteration = tps -> {
                 try {

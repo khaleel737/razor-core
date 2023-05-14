@@ -15,22 +15,25 @@
  */
 package com.axes.razorcore.tests.razorcore.tests;
 
+import com.axes.razorcore.config.LoggingConfiguration;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.OrderCommand;
+import com.axes.razorcore.data.L2MarketData;
 import com.axes.razorcore.orderbook.IOrderBook;
-import exchange.core2.core.common.L2MarketData;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.cmd.OrderCommand;
-import exchange.core2.core.common.config.LoggingConfiguration;
-import exchange.core2.tests.util.TestOrdersGenerator;
+import com.axes.razorcore.orderbook.OrderBookNaiveImpl;
+import com.axes.razorcore.tests.test.util.TestOrdersGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static exchange.core2.core.common.OrderAction.ASK;
-import static exchange.core2.core.common.OrderAction.BID;
-import static exchange.core2.core.common.OrderType.GTC;
-import static exchange.core2.core.common.cmd.CommandResultCode.SUCCESS;
+import static com.axes.razorcore.core.OrderAction.ASK;
+import static com.axes.razorcore.core.OrderAction.BID;
+import static com.axes.razorcore.core.OrderType.GTC;
+import static com.axes.razorcore.cqrs.CommandResultCode.SUCCESS;
+
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;

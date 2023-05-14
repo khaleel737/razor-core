@@ -15,8 +15,8 @@
  */
 package com.axes.razorcore.tests.test.util;
 
-import exchange.core2.core.common.CoreSymbolSpecification;
-import exchange.core2.core.common.SymbolType;
+import com.axes.razorcore.core.SymbolSpecification;
+import com.axes.razorcore.core.SymbolType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.distribution.ParetoDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
@@ -69,7 +69,7 @@ public final class UserCurrencyAccountsGenerator {
         return result;
     }
 
-    public static int[] createUserListForSymbol(final List<BitSet> users2currencies, final CoreSymbolSpecification spec, int symbolMessagesExpected) {
+    public static int[] createUserListForSymbol(final List<BitSet> users2currencies, final SymbolSpecification spec, int symbolMessagesExpected) {
 
         // we would prefer to choose from same number of users as number of messages to be generated in tests
         // at least 2 users are required, but not more than half of all users provided
@@ -81,7 +81,7 @@ public final class UserCurrencyAccountsGenerator {
         int c = 0;
         do {
             BitSet accounts = users2currencies.get(uid);
-            if (accounts.get(spec.quoteCurrency) && (spec.type == SymbolType.FUTURES_CONTRACT || accounts.get(spec.baseCurrency))) {
+            if (accounts.get(spec.quoteCurrency) && (spec.type == SymbolType.FUTURES_CONTRACTS || accounts.get(spec.baseCurrency))) {
                 uids.add(uid);
             }
             if (++uid == users2currencies.size()) {

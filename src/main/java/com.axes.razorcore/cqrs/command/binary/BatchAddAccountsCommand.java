@@ -15,7 +15,7 @@
  */
 package com.axes.razorcore.cqrs.command.binary;
 
-import exchange.core2.core.utils.SerializationUtils;
+import com.axes.razorcore.utils.SerializationUtils;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

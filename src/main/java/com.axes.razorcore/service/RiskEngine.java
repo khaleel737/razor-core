@@ -641,9 +641,9 @@ public final class RiskEngine implements WriteBytesMarshallable {
             }
         }
 
-        if (ev.matchEventType == MatchEventType.TRADE && uidForThisHandler(ev.matchedOrderUid)) {
+        if (ev.matchEventType == MatchEventType.TRADE && uidForThisHandler(ev.matchedPositionsId)) {
             // update maker's position
-            final UserProfile maker = userProfileService.getUserProfileOrAddSuspended(ev.matchedOrderUid);
+            final UserProfile maker = userProfileService.getUserProfileOrAddSuspended(ev.matchedPositionsUuid);
             final SymbolPosition makerSpr = maker.getPositionRecordOrThrowException(spec.symbolId);
             long sizeOpen = makerSpr.updatePositionForMarginTrade(takerAction.opposite(), ev.size, ev.price);
             final long fee = spec.makerFee * sizeOpen;
@@ -786,7 +786,7 @@ public final class RiskEngine implements WriteBytesMarshallable {
 
     private void removePositionRecord(SymbolPosition record, UserProfile userProfile) {
         userProfile.accounts.addToValue(record.currency, record.profit);
-        userProfile.positions.removeKey(record.symbol);
+        userProfile.userPositions.removeKey(record.symbol);
         objectsPool.put(ObjectsPool.SYMBOL_POSITION_RECORD, record);
     }
 

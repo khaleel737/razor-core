@@ -15,15 +15,20 @@
  */
 package com.axes.razorcore.tests.test.util;
 
+import com.axes.razorcore.config.LoggingConfiguration;
+import com.axes.razorcore.core.OrderAction;
+import com.axes.razorcore.core.OrderType;
+import com.axes.razorcore.core.SymbolSpecification;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.OrderCommand;
+import com.axes.razorcore.cqrs.OrderCommandType;
+import com.axes.razorcore.cqrs.command.*;
+import com.axes.razorcore.data.L2MarketData;
+import com.axes.razorcore.event.MatchEventType;
+import com.axes.razorcore.event.MatchTradeEventHandler;
+import com.axes.razorcore.orderbook.IOrderBook;
+import com.axes.razorcore.orderbook.OrderBookNaiveImpl;
 import com.google.common.collect.Iterables;
-import exchange.core2.core.common.*;
-import exchange.core2.core.common.api.*;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.cmd.OrderCommand;
-import exchange.core2.core.common.cmd.OrderCommandType;
-import exchange.core2.core.common.config.LoggingConfiguration;
-import exchange.core2.core.orderbook.IOrderBook;
-import exchange.core2.core.orderbook.OrderBookNaiveImpl;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +48,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
-import static exchange.core2.tests.util.TestConstants.SYMBOLSPEC_EUR_USD;
+import static com.axes.razorcore.tests.test.util.TestConstants.SYMBOLSPEC_EUR_USD;
 
 @Slf4j
 public final class TestOrdersGenerator {
@@ -61,7 +66,7 @@ public final class TestOrdersGenerator {
 
     public static MultiSymbolGenResult generateMultipleSymbols(final TestOrdersGeneratorConfig config) {
 
-        final List<CoreSymbolSpecification> coreSymbolSpecifications = config.coreSymbolSpecifications;
+        final List<SymbolSpecification> coreSymbolSpecifications = config.coreSymbolSpecifications;
         final int totalTransactionsNumber = config.totalTransactionsNumber;
         final List<BitSet> usersAccounts = config.usersAccounts;
         final int targetOrderBookOrdersTotal = config.targetOrderBookOrdersTotal;
@@ -78,7 +83,7 @@ public final class TestOrdersGenerator {
             final LongConsumer sharedProgressLogger = createAsyncProgressLogger(totalTransactionsNumber + targetOrderBookOrdersTotal);
 
             for (int i = coreSymbolSpecifications.size() - 1; i >= 0; i--) {
-                final CoreSymbolSpecification spec = coreSymbolSpecifications.get(i);
+                final SymbolSpecification spec = coreSymbolSpecifications.get(i);
                 final int orderBookSizeTarget = (int) (targetOrderBookOrdersTotal * distribution[i] + 0.5);
                 final int commandsNum = (i != 0) ? (int) (totalTransactionsNumber * distribution[i] + 0.5) : Math.max(quotaLeft, 1);
                 quotaLeft -= commandsNum;
@@ -229,8 +234,8 @@ public final class TestOrdersGenerator {
             }
 
             // process and cleanup matcher events
-            cmd.processMatcherEvents(ev -> matcherTradeEventEventHandler(session, ev, cmd));
-            cmd.matcherEvent = null;
+            cmd.processMatchTradeEventHandler(ev -> matcherTradeEventEventHandler(session, ev, cmd));
+            cmd.matchTradeEventHandler = null;
 
             if (i >= nextSizeCheck) {
 
@@ -276,7 +281,7 @@ public final class TestOrdersGenerator {
 //                log.debug("{}", dumpOrderBook(l2MarketDataSnapshot));
 
             if (session.avalancheIOC) {
-                session.lastTotalVolumeAsk = l2MarketDataSnapshot.totalOrderBookVolumeAsk();
+                session.lastTotalVolumeAsk = l2MarketDataSnapshot.totalOrderBookVolumesAsk();
                 session.lastTotalVolumeBid = l2MarketDataSnapshot.totalOrderBookVolumeBid();
             }
 
@@ -289,19 +294,19 @@ public final class TestOrdersGenerator {
         }
     }
 
-    private static void matcherTradeEventEventHandler(final TestOrdersGeneratorSession session, final MatcherTradeEvent ev, final OrderCommand orderCommand) {
+    private static void matcherTradeEventEventHandler(final TestOrdersGeneratorSession session, final MatchTradeEventHandler ev, final OrderCommand orderCommand) {
         int activeOrderId = (int) orderCommand.orderId;
-        if (ev.eventType == MatcherEventType.TRADE) {
+        if (ev.matchEventType == MatchEventType.TRADE) {
             if (ev.activeOrderCompleted) {
                 session.numCompleted++;
             }
-            if (ev.matchedOrderCompleted) {
-                session.orderUids.remove((int) ev.matchedOrderId);
+            if (ev.matchedPositionsCompleted) {
+                session.orderUids.remove((int) ev.matchedPositionsId);
                 session.numCompleted++;
             }
 
             // decrease size (important for reduce operation)
-            if (session.orderSizes.addToValue((int) ev.matchedOrderId, (int) -ev.size) < 0) {
+            if (session.orderSizes.addToValue((int) ev.matchedPositionsId, (int) -ev.size) < 0) {
                 throw new IllegalStateException();
             }
 
@@ -313,14 +318,14 @@ public final class TestOrdersGenerator {
                 session.priceDirection = -1;
             }
 
-        } else if (ev.eventType == MatcherEventType.REJECT) {
+        } else if (ev.matchEventType == MatchEventType.REJECT) {
             session.numRejected++;
 
             // update order book stat if order get rejected
             // that will trigger generator to issue more limit orders
             updateOrderBookSizeStat(session);
 
-        } else if (ev.eventType == MatcherEventType.REDUCE) {
+        } else if (ev.matchEventType == MatchEventType.REDUCE) {
             session.numReduced++;
 
         } else {
@@ -408,14 +413,14 @@ public final class TestOrdersGenerator {
         if (q == 2) {
             session.orderUids.remove(orderId);
             session.counterCancel++;
-            return OrderCommand.cancel(orderId, uid);
+            return OrderCommand.cancelOrder(orderId, uid);
 
         } else if (q == 3) {
             session.counterReduce++;
 
             int prevSize = session.orderSizes.get(orderId);
             int reduceBy = session.rand.nextInt(prevSize) + 1;
-            return OrderCommand.reduce(orderId, uid, reduceBy);
+            return OrderCommand.reduceOrder(orderId, uid, reduceBy);
 
         } else {
             int prevPrice = session.orderPrices.get(orderId);
@@ -442,7 +447,7 @@ public final class TestOrdersGenerator {
 
             session.orderPrices.put(orderId, newPrice);
 
-            return OrderCommand.update(orderId, (int) (long) uid, newPrice);
+            return OrderCommand.updateOrder(orderId, (int) (long) uid, newPrice);
         }
     }
 
@@ -479,8 +484,8 @@ public final class TestOrdersGenerator {
         session.seq++;
 
         return OrderCommand.builder()
-                .command(OrderCommandType.PLACE_ORDER)
-                .uid(uid)
+                .commandType(OrderCommandType.PLACE_ORDER)
+                .uuid(uid)
                 .orderId(newOrderId)
                 .action(action)
                 .orderType(OrderType.GTC)
@@ -549,9 +554,9 @@ public final class TestOrdersGenerator {
 
 
         return OrderCommand.builder()
-                .command(OrderCommandType.PLACE_ORDER)
+                .commandType(OrderCommandType.PLACE_ORDER)
                 .orderType(orderType)
-                .uid(uid)
+                .uuid(uid)
                 .orderId(newOrderId)
                 .action(action)
                 .size(size)
@@ -575,26 +580,26 @@ public final class TestOrdersGenerator {
             ArrayList<ApiCommand> apiCommands = new ArrayList<>(to - from);
             for (int i = from; i < to; i++) {
                 final OrderCommand cmd = commands.get(i);
-                switch (cmd.command) {
+                switch (cmd.commandType) {
                     case PLACE_ORDER:
-                        apiCommands.add(ApiPlaceOrder.builder().symbol(cmd.symbol).uid(cmd.uid).orderId(cmd.orderId).price(cmd.price)
+                        apiCommands.add(ApiPlaceOrder.builder().symbol(cmd.symbol).uuid(cmd.uuid).orderId(cmd.orderId).price(cmd.price)
                                 .size(cmd.size).action(cmd.action).orderType(cmd.orderType).reservePrice(cmd.reserveBidPrice).build());
                         break;
 
                     case MOVE_ORDER:
-                        apiCommands.add(new ApiMoveOrder(cmd.orderId, cmd.price, cmd.uid, cmd.symbol));
+                        apiCommands.add(new ApiMoveOrder(cmd.orderId, cmd.price, cmd.uuid, cmd.symbol));
                         break;
 
                     case CANCEL_ORDER:
-                        apiCommands.add(new ApiCancelOrder(cmd.orderId, cmd.uid, cmd.symbol));
+                        apiCommands.add(new ApiCancelOrder(cmd.orderId, cmd.uuid, cmd.symbol));
                         break;
 
                     case REDUCE_ORDER:
-                        apiCommands.add(new ApiReduceOrder(cmd.orderId, cmd.uid, cmd.symbol, cmd.size));
+                        apiCommands.add(new ApiReduceOrder(cmd.orderId, cmd.uuid, cmd.symbol, cmd.size));
                         break;
 
                     default:
-                        throw new IllegalStateException("unsupported type: " + cmd.command);
+                        throw new IllegalStateException("unsupported type: " + cmd.commandType);
                 }
             }
 
@@ -612,7 +617,7 @@ public final class TestOrdersGenerator {
         final IntIntHashMap symbolCounters = new IntIntHashMap();
 
         for (OrderCommand cmd : allCommands) {
-            switch (cmd.command) {
+            switch (cmd.commandType) {
                 case MOVE_ORDER:
                     counterMove++;
                     break;

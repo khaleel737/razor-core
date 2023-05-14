@@ -15,10 +15,10 @@
  */
 package com.axes.razorcore.tests.test.integration;
 
-import exchange.core2.core.common.config.InitialStateConfiguration;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.core.common.config.SerializationConfiguration;
-import exchange.core2.tests.util.*;
+import com.axes.razorcore.config.InitialStateConfiguration;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.config.SerializationConfiguration;
+import com.axes.razorcore.tests.test.util.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 

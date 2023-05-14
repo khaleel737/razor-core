@@ -16,10 +16,10 @@
 package com.axes.razorcore.cqrs.query;
 
 
-import exchange.core2.core.common.Order;
-import exchange.core2.core.common.PositionDirection;
-import exchange.core2.core.common.UserStatus;
-import exchange.core2.core.utils.SerializationUtils;
+import com.axes.razorcore.core.Order;
+import com.axes.razorcore.core.OrderDirection;
+import com.axes.razorcore.core.UserStatus;
+import com.axes.razorcore.utils.SerializationUtils;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.bytes.BytesIn;
@@ -163,7 +163,7 @@ public final class SingleUserReportResult implements ReportResult {
 
         public final int quoteCurrency;
         // open positions state (for margin trades only)
-        public final PositionDirection direction;
+        public final OrderDirection direction;
         public final long openVolume;
         public final long openPriceSum;
         public final long profit;
@@ -176,7 +176,7 @@ public final class SingleUserReportResult implements ReportResult {
 
             this.quoteCurrency = bytes.readInt();
 
-            this.direction = PositionDirection.of(bytes.readByte());
+            this.direction = OrderDirection.of(bytes.readByte());
             this.openVolume = bytes.readLong();
             this.openPriceSum = bytes.readLong();
             this.profit = bytes.readLong();

@@ -15,26 +15,31 @@
  */
 package com.axes.razorcore.tests.test.integration;
 
-import exchange.core2.core.common.*;
-import exchange.core2.core.common.api.ApiAdjustUserBalance;
-import exchange.core2.core.common.api.ApiCancelOrder;
-import exchange.core2.core.common.api.ApiMoveOrder;
-import exchange.core2.core.common.api.ApiPlaceOrder;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.cmd.OrderCommandType;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.ExchangeTestContainer;
-import exchange.core2.tests.util.L2MarketDataHelper;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.core.OrderAction;
+import com.axes.razorcore.core.OrderType;
+import com.axes.razorcore.core.SymbolSpecification;
+import com.axes.razorcore.core.SymbolType;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.OrderCommandType;
+import com.axes.razorcore.cqrs.command.ApiAdjustUserBalance;
+import com.axes.razorcore.cqrs.command.ApiCancelOrder;
+import com.axes.razorcore.cqrs.command.ApiMoveOrder;
+import com.axes.razorcore.cqrs.command.ApiPlaceOrder;
+import com.axes.razorcore.event.MatchEventType;
+import com.axes.razorcore.event.MatchTradeEventHandler;
+import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
+import com.axes.razorcore.tests.test.util.L2MarketDataHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import java.util.List;
 
-import static exchange.core2.core.common.OrderAction.ASK;
-import static exchange.core2.core.common.OrderType.GTC;
-import static exchange.core2.tests.util.ExchangeTestContainer.CHECK_SUCCESS;
-import static exchange.core2.tests.util.TestConstants.*;
+import static com.axes.razorcore.core.OrderAction.ASK;
+import static com.axes.razorcore.core.OrderType.GTC;
+import static com.axes.razorcore.tests.test.util.ExchangeTestContainer.CHECK_SUCCESS;
+import static com.axes.razorcore.tests.test.util.TestConstants.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,60 +82,60 @@ public abstract class ITExchangeCoreIntegration {
 
 
     // TODO count/verify number of commands and events
-    private void basicFullCycleTest(final CoreSymbolSpecification symbolSpec) {
+    private void basicFullCycleTest(final SymbolSpecification symbolSpec) {
 
         try (final ExchangeTestContainer container = ExchangeTestContainer.create(getPerformanceConfiguration())) {
             container.initBasicSymbols();
             container.initBasicUsers();
 
             // ### 1. first user places limit orders
-            final ApiPlaceOrder order101 = ApiPlaceOrder.builder().uid(UID_1).orderId(101).price(1600).size(7).action(ASK).orderType(GTC).symbol(symbolSpec.symbolId).build();
+            final ApiPlaceOrder order101 = ApiPlaceOrder.builder().uuid(UID_1).orderId(101).price(1600).size(7).action(ASK).orderType(GTC).symbol(symbolSpec.symbolId).build();
 
             log.debug("PLACE 101: {}", order101);
             container.submitCommandSync(order101, cmd -> {
                 assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
                 assertThat(cmd.orderId, is(101L));
-                assertThat(cmd.uid, is(UID_1));
+                assertThat(cmd.uuid, is(UID_1));
                 assertThat(cmd.price, is(1600L));
                 assertThat(cmd.size, is(7L));
                 assertThat(cmd.action, is(ASK));
                 assertThat(cmd.orderType, is(GTC));
                 assertThat(cmd.symbol, is(symbolSpec.symbolId));
-                assertNull(cmd.matcherEvent);
+                assertNull(cmd.matchTradeEventHandler);
             });
 
-            final int reserve102 = symbolSpec.type == SymbolType.CURRENCY_EXCHANGE_PAIR ? 1561 : 0;
-            final ApiPlaceOrder order102 = ApiPlaceOrder.builder().uid(UID_1).orderId(102).price(1550).reservePrice(reserve102).size(4)
+            final int reserve102 = symbolSpec.type == SymbolType.CURRENCY_EXCHANGE_PAIRS ? 1561 : 0;
+            final ApiPlaceOrder order102 = ApiPlaceOrder.builder().uuid(UID_1).orderId(102).price(1550).reservePrice(reserve102).size(4)
                     .action(OrderAction.BID).orderType(GTC).symbol(symbolSpec.symbolId).build();
             log.debug("PLACE 102: {}", order102);
             container.submitCommandSync(order102, cmd -> {
                 assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                assertNull(cmd.matcherEvent);
+                assertNull(cmd.matchTradeEventHandler);
             });
 
             final L2MarketDataHelper l2helper = new L2MarketDataHelper().addAsk(1600, 7).addBid(1550, 4);
             assertEquals(l2helper.build(), container.requestCurrentOrderBook(symbolSpec.symbolId));
 
             // ### 2. second user sends market order, first order partially matched
-            final int reserve201 = symbolSpec.type == SymbolType.CURRENCY_EXCHANGE_PAIR ? 1800 : 0;
-            final ApiPlaceOrder order201 = ApiPlaceOrder.builder().uid(UID_2).orderId(201).price(1700).reservePrice(reserve201).size(2).action(OrderAction.BID).orderType(OrderType.IOC).symbol(symbolSpec.symbolId).build();
+            final int reserve201 = symbolSpec.type == SymbolType.CURRENCY_EXCHANGE_PAIRS ? 1800 : 0;
+            final ApiPlaceOrder order201 = ApiPlaceOrder.builder().uuid(UID_2).orderId(201).price(1700).reservePrice(reserve201).size(2).action(OrderAction.BID).orderType(OrderType.IOC).symbol(symbolSpec.symbolId).build();
             log.debug("PLACE 201: {}", order201);
             container.submitCommandSync(order201, cmd -> {
                 assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
 
-                List<MatcherTradeEvent> matcherEvents = cmd.extractEvents();
-                assertThat(matcherEvents.size(), is(1));
+                List<MatchTradeEventHandler> matchTradeEventHandlers = cmd.extractEvents();
+                assertThat(matchTradeEventHandlers.size(), is(1));
 
                 assertThat(cmd.action, is(OrderAction.BID));
                 assertThat(cmd.orderId, is(201L));
-                assertThat(cmd.uid, is(UID_2));
+                assertThat(cmd.uuid, is(UID_2));
 
-                MatcherTradeEvent evt = matcherEvents.get(0);
+                MatchTradeEventHandler evt = matchTradeEventHandlers.get(0);
                 assertThat(evt.activeOrderCompleted, is(true));
-                assertThat(evt.matchedOrderId, is(101L));
-                assertThat(evt.matchedOrderUid, is(UID_1));
-                assertThat(evt.matchedOrderCompleted, is(false));
-                assertThat(evt.eventType, is(MatcherEventType.TRADE));
+                assertThat(evt.matchedPositionsId, is(101L));
+                assertThat(evt.matchedPositionsUuid, is(UID_1));
+                assertThat(evt.matchedPositionsCompleted, is(false));
+                assertThat(evt.matchEventType, is(MatchEventType.TRADE));
                 assertThat(evt.size, is(2L));
                 assertThat(evt.price, is(1600L));
             });
@@ -141,15 +146,15 @@ public abstract class ITExchangeCoreIntegration {
 
 
             // ### 3. second user places limit order
-            final int reserve202 = symbolSpec.type == SymbolType.CURRENCY_EXCHANGE_PAIR ? 1583 : 0;
-            final ApiPlaceOrder order202 = ApiPlaceOrder.builder().uid(UID_2).orderId(202).price(1583).reservePrice(reserve202)
+            final int reserve202 = symbolSpec.type == SymbolType.CURRENCY_EXCHANGE_PAIRS ? 1583 : 0;
+            final ApiPlaceOrder order202 = ApiPlaceOrder.builder().uuid(UID_2).orderId(202).price(1583).reservePrice(reserve202)
                     .size(4).action(OrderAction.BID).orderType(GTC).symbol(symbolSpec.symbolId).build();
             log.debug("PLACE 202: {}", order202);
             container.submitCommandSync(order202, cmd -> {
                 assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                assertNull(cmd.matcherEvent);
-                List<MatcherTradeEvent> matcherEvents = cmd.extractEvents();
-                assertThat(matcherEvents.size(), is(0));
+                assertNull(cmd.matchTradeEventHandler);
+                List<MatchTradeEventHandler> matchTradeEventHandlers = cmd.extractEvents();
+                assertThat(matchTradeEventHandlers.size(), is(0));
             });
 
             l2helper.insertBid(0, 1583, 4);
@@ -157,24 +162,24 @@ public abstract class ITExchangeCoreIntegration {
 
 
             // ### 4. first trader moves his order - it will match existing order (202) but not entirely
-            final ApiMoveOrder moveOrder = ApiMoveOrder.builder().symbol(symbolSpec.symbolId).uid(UID_1).orderId(101).newPrice(1580).build();
+            final ApiMoveOrder moveOrder = ApiMoveOrder.builder().symbol(symbolSpec.symbolId).uuid(UID_1).orderId(101).newPrice(1580).build();
             log.debug("MOVE 101: {}", moveOrder);
             container.submitCommandSync(moveOrder, cmd -> {
                 assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
 
-                List<MatcherTradeEvent> matcherEvents = cmd.extractEvents();
-                assertThat(matcherEvents.size(), is(1));
+                List<MatchTradeEventHandler> matchTradeEventHandlers = cmd.extractEvents();
+                assertThat(matchTradeEventHandlers.size(), is(1));
 
                 assertThat(cmd.action, is(ASK));
                 assertThat(cmd.orderId, is(101L));
-                assertThat(cmd.uid, is(UID_1));
+                assertThat(cmd.uuid, is(UID_1));
 
-                MatcherTradeEvent evt = matcherEvents.get(0);
+                MatchTradeEventHandler evt = matchTradeEventHandlers.get(0);
                 assertThat(evt.activeOrderCompleted, is(false));
-                assertThat(evt.matchedOrderId, is(202L));
-                assertThat(evt.matchedOrderUid, is(UID_2));
-                assertThat(evt.matchedOrderCompleted, is(true));
-                assertThat(evt.eventType, is(MatcherEventType.TRADE));
+                assertThat(evt.matchedPositionsId, is(202L));
+                assertThat(evt.matchedPositionsUuid, is(UID_2));
+                assertThat(evt.matchedPositionsCompleted, is(true));
+                assertThat(evt.matchEventType, is(MatchEventType.TRADE));
                 assertThat(evt.size, is(4L));
                 assertThat(evt.price, is(1583L));
             });
@@ -197,7 +202,7 @@ public abstract class ITExchangeCoreIntegration {
 
             // try submit an order - limit BUY 7 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
             // should be rejected
-            final ApiPlaceOrder order101 = ApiPlaceOrder.builder().uid(UID_1).orderId(101).price(30_000).reservePrice(30_000)
+            final ApiPlaceOrder order101 = ApiPlaceOrder.builder().uuid(UID_1).orderId(101).price(30_000).reservePrice(30_000)
                     .size(7).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build();
 
             container.submitCommandSync(order101, cmd -> {
@@ -211,20 +216,20 @@ public abstract class ITExchangeCoreIntegration {
             });
 
             // add 100K more
-            container.submitCommandSync(ApiAdjustUserBalance.builder().uid(UID_1).currency(CURRENECY_XBT).amount(100_000).transactionId(223948217349827L).build(), CHECK_SUCCESS);
+            container.submitCommandSync(ApiAdjustUserBalance.builder().uuid(UID_1).currency(CURRENECY_XBT).amount(100_000).transactionId(223948217349827L).build(), CHECK_SUCCESS);
 
             // submit order again - should be placed
             container.submitCommandSync(order101, cmd -> {
                 assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
                 assertThat(cmd.orderId, is(101L));
-                assertThat(cmd.uid, is(UID_1));
+                assertThat(cmd.uuid, is(UID_1));
                 assertThat(cmd.price, is(30_000L));
                 assertThat(cmd.reserveBidPrice, is(30_000L));
                 assertThat(cmd.size, is(7L));
                 assertThat(cmd.action, is(OrderAction.BID));
                 assertThat(cmd.orderType, is(GTC));
                 assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
-                assertNull(cmd.matcherEvent);
+                assertNull(cmd.matchTradeEventHandler);
             });
 
             // verify order placed with correct reserve price and account balance is updated accordingly
@@ -236,7 +241,7 @@ public abstract class ITExchangeCoreIntegration {
             container.createUserWithMoney(UID_2, CURRENECY_ETH, 699_999); // 699'999 szabo (<~0.7 ETH)
             // try submit an order - sell 7 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
             // should be rejected
-            final ApiPlaceOrder order102 = ApiPlaceOrder.builder().uid(UID_2).orderId(102).price(30_000).size(7).action(ASK).orderType(OrderType.IOC).symbol(SYMBOL_EXCHANGE).build();
+            final ApiPlaceOrder order102 = ApiPlaceOrder.builder().uuid(UID_2).orderId(102).price(30_000).size(7).action(ASK).orderType(OrderType.IOC).symbol(SYMBOL_EXCHANGE).build();
             container.submitCommandSync(order102, cmd -> {
                 assertThat(cmd.resultCode, is(CommandResultCode.RISK_NSF));
             });
@@ -248,19 +253,19 @@ public abstract class ITExchangeCoreIntegration {
             });
 
             // add 1 szabo more
-            container.submitCommandSync(ApiAdjustUserBalance.builder().uid(UID_2).currency(CURRENECY_ETH).amount(1).transactionId(2193842938742L).build(), CHECK_SUCCESS);
+            container.submitCommandSync(ApiAdjustUserBalance.builder().uuid(UID_2).currency(CURRENECY_ETH).amount(1).transactionId(2193842938742L).build(), CHECK_SUCCESS);
 
             // submit order again - should be matched
             container.submitCommandSync(order102, cmd -> {
                 assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
                 assertThat(cmd.orderId, is(102L));
-                assertThat(cmd.uid, is(UID_2));
+                assertThat(cmd.uuid, is(UID_2));
                 assertThat(cmd.price, is(30_000L));
                 assertThat(cmd.size, is(7L));
                 assertThat(cmd.action, is(ASK));
                 assertThat(cmd.orderType, is(OrderType.IOC));
                 assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
-                assertNotNull(cmd.matcherEvent);
+                assertNotNull(cmd.matchTradeEventHandler);
             });
 
             container.validateUserState(UID_2, profile -> {
@@ -289,7 +294,7 @@ public abstract class ITExchangeCoreIntegration {
 
             // try submit an order - sell 1001 lots, price 300K satoshi (30K x10 step) for each lot 100K szabo
             // should be rejected
-            container.submitCommandSync(ApiPlaceOrder.builder().uid(UID_1).orderId(202).price(30_000).size(1001).action(ASK).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
+            container.submitCommandSync(ApiPlaceOrder.builder().uuid(UID_1).orderId(202).price(30_000).size(1001).action(ASK).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.RISK_NSF));
                     });
@@ -301,18 +306,18 @@ public abstract class ITExchangeCoreIntegration {
 
             // submit order again - should be placed
             container.submitCommandSync(
-                    ApiPlaceOrder.builder().uid(UID_1).orderId(202).price(30_000).size(1000).action(ASK).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiPlaceOrder.builder().uuid(UID_1).orderId(202).price(30_000).size(1000).action(ASK).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.PLACE_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.PLACE_ORDER));
                         assertThat(cmd.orderId, is(202L));
-                        assertThat(cmd.uid, is(UID_1));
+                        assertThat(cmd.uuid, is(UID_1));
                         assertThat(cmd.price, is(30_000L));
                         assertThat(cmd.size, is(1000L));
                         assertThat(cmd.action, is(ASK));
                         assertThat(cmd.orderType, is(GTC));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
-                        assertNull(cmd.matcherEvent);
+                        assertNull(cmd.matchTradeEventHandler);
                     });
 
             container.validateUserState(UID_1, profile -> {
@@ -322,15 +327,15 @@ public abstract class ITExchangeCoreIntegration {
 
             // move order to higher price - shouldn't be a problem for ASK order
             container.submitCommandSync(
-                    ApiMoveOrder.builder().uid(UID_1).orderId(202).newPrice(40_000).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiMoveOrder.builder().uuid(UID_1).orderId(202).newPrice(40_000).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.MOVE_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.MOVE_ORDER));
                         assertThat(cmd.orderId, is(202L));
-                        assertThat(cmd.uid, is(UID_1));
+                        assertThat(cmd.uuid, is(UID_1));
                         assertThat(cmd.price, is(40_000L));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
-                        assertNull(cmd.matcherEvent);
+                        assertNull(cmd.matchTradeEventHandler);
                     });
 
             container.validateUserState(UID_1, profile -> {
@@ -340,15 +345,15 @@ public abstract class ITExchangeCoreIntegration {
 
             // move order to lower price - shouldn't be a problem as well for ASK order
             container.submitCommandSync(
-                    ApiMoveOrder.builder().uid(UID_1).orderId(202).newPrice(20_000).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiMoveOrder.builder().uuid(UID_1).orderId(202).newPrice(20_000).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.MOVE_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.MOVE_ORDER));
                         assertThat(cmd.orderId, is(202L));
-                        assertThat(cmd.uid, is(UID_1));
+                        assertThat(cmd.uuid, is(UID_1));
                         assertThat(cmd.price, is(20_000L));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
-                        assertNull(cmd.matcherEvent);
+                        assertNull(cmd.matchTradeEventHandler);
                     });
 
             container.validateUserState(UID_1, profile -> {
@@ -361,7 +366,7 @@ public abstract class ITExchangeCoreIntegration {
 
             // try submit order with reservePrice above funds limit - rejected
             container.submitCommandSync(
-                    ApiPlaceOrder.builder().uid(UID_2).orderId(203).price(18_000).reservePrice(19_000).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiPlaceOrder.builder().uuid(UID_2).orderId(203).price(18_000).reservePrice(19_000).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.RISK_NSF));
                     });
@@ -373,19 +378,19 @@ public abstract class ITExchangeCoreIntegration {
 
             // submit order with reservePrice below funds limit - should be placed
             container.submitCommandSync(
-                    ApiPlaceOrder.builder().uid(UID_2).orderId(203).price(18_000).reservePrice(18_500).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiPlaceOrder.builder().uuid(UID_2).orderId(203).price(18_000).reservePrice(18_500).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.PLACE_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.PLACE_ORDER));
                         assertThat(cmd.orderId, is(203L));
-                        assertThat(cmd.uid, is(UID_2));
+                        assertThat(cmd.uuid, is(UID_2));
                         assertThat(cmd.price, is(18_000L));
                         assertThat(cmd.reserveBidPrice, is(18_500L));
                         assertThat(cmd.size, is(500L));
                         assertThat(cmd.action, is(OrderAction.BID));
                         assertThat(cmd.orderType, is(GTC));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
-                        assertNull(cmd.matcherEvent);
+                        assertNull(cmd.matchTradeEventHandler);
                     });
 
 
@@ -399,15 +404,15 @@ public abstract class ITExchangeCoreIntegration {
 
             // move order to lower price - shouldn't be a problem for BID order
             container.submitCommandSync(
-                    ApiMoveOrder.builder().uid(UID_2).orderId(203).newPrice(15_000).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiMoveOrder.builder().uuid(UID_2).orderId(203).newPrice(15_000).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.MOVE_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.MOVE_ORDER));
                         assertThat(cmd.orderId, is(203L));
-                        assertThat(cmd.uid, is(UID_2));
+                        assertThat(cmd.uuid, is(UID_2));
                         assertThat(cmd.price, is(15_000L));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
-                        assertNull(cmd.matcherEvent);
+                        assertNull(cmd.matchTradeEventHandler);
                     });
 
             container.validateUserState(UID_2, profile -> {
@@ -417,7 +422,7 @@ public abstract class ITExchangeCoreIntegration {
 
             // move order to higher price (above limit) - should be rejected
             container.submitCommandSync(
-                    ApiMoveOrder.builder().uid(UID_2).orderId(203).newPrice(18_501).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiMoveOrder.builder().uuid(UID_2).orderId(203).newPrice(18_501).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.MATCHING_MOVE_FAILED_PRICE_OVER_RISK_LIMIT));
                     });
@@ -429,15 +434,15 @@ public abstract class ITExchangeCoreIntegration {
 
             // move order to higher price (equals limit) - should be accepted
             container.submitCommandSync(
-                    ApiMoveOrder.builder().uid(UID_2).orderId(203).newPrice(18_500).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiMoveOrder.builder().uuid(UID_2).orderId(203).newPrice(18_500).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.MOVE_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.MOVE_ORDER));
                         assertThat(cmd.orderId, is(203L));
-                        assertThat(cmd.uid, is(UID_2));
+                        assertThat(cmd.uuid, is(UID_2));
                         assertThat(cmd.price, is(18_500L));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
-                        assertNull(cmd.matcherEvent);
+                        assertNull(cmd.matchTradeEventHandler);
                     });
 
             container.validateUserState(UID_2, profile -> {
@@ -447,7 +452,7 @@ public abstract class ITExchangeCoreIntegration {
 
             // set second order price to 17'500
             container.submitCommandSync(
-                    ApiMoveOrder.builder().uid(UID_2).orderId(203).newPrice(17_500).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiMoveOrder.builder().uuid(UID_2).orderId(203).newPrice(17_500).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
                     });
@@ -459,24 +464,24 @@ public abstract class ITExchangeCoreIntegration {
 
             // move ASK order to lower price 16'900 so it will trigger trades (by maker's price 17_500)
             container.submitCommandSync(
-                    ApiMoveOrder.builder().uid(UID_1).orderId(202).newPrice(16_900).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiMoveOrder.builder().uuid(UID_1).orderId(202).newPrice(16_900).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.MOVE_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.MOVE_ORDER));
                         assertThat(cmd.orderId, is(202L));
-                        assertThat(cmd.uid, is(UID_1));
+                        assertThat(cmd.uuid, is(UID_1));
                         assertThat(cmd.price, is(16_900L));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
 
                         assertThat(cmd.action, is(ASK));
 
-                        final MatcherTradeEvent evt = cmd.matcherEvent;
+                        final MatchTradeEventHandler evt = cmd.matchTradeEventHandler;
                         assertNotNull(evt);
-                        assertThat(evt.eventType, is(MatcherEventType.TRADE));
+                        assertThat(evt.matchEventType, is(MatchEventType.TRADE));
                         assertThat(evt.activeOrderCompleted, is(false));
-                        assertThat(evt.matchedOrderId, is(203L));
-                        assertThat(evt.matchedOrderUid, is(UID_2));
-                        assertThat(evt.matchedOrderCompleted, is(true));
+                        assertThat(evt.matchedPositionsId, is(203L));
+                        assertThat(evt.matchedPositionsUuid, is(UID_2));
+                        assertThat(evt.matchedPositionsCompleted, is(true));
                         assertThat(evt.price, is(17_500L)); // user price from maker order
                         assertThat(evt.bidderHoldPrice, is(18_500L)); // user original reserve price from bidder order (203)
                         assertThat(evt.size, is(500L));
@@ -498,19 +503,19 @@ public abstract class ITExchangeCoreIntegration {
 
             // cancel remaining order
             container.submitCommandSync(
-                    ApiCancelOrder.builder().orderId(202).uid(UID_1).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiCancelOrder.builder().orderId(202).uuid(UID_1).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.CANCEL_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.CANCEL_ORDER));
                         assertThat(cmd.orderId, is(202L));
-                        assertThat(cmd.uid, is(UID_1));
+                        assertThat(cmd.uuid, is(UID_1));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
 
                         assertThat(cmd.action, is(ASK));
 
-                        final MatcherTradeEvent evt = cmd.matcherEvent;
+                        final MatchTradeEventHandler evt = cmd.matchTradeEventHandler;
                         assertNotNull(evt);
-                        assertThat(evt.eventType, is(MatcherEventType.REDUCE));
+                        assertThat(evt.matchEventType, is(MatchEventType.REDUCE));
                         assertThat(evt.size, is(500L));
                     });
 
@@ -537,7 +542,7 @@ public abstract class ITExchangeCoreIntegration {
 
             // submit order with reservePrice below funds limit - should be placed
             container.submitCommandSync(
-                    ApiPlaceOrder.builder().uid(UID_2).orderId(203).price(18_000).reservePrice(18_500).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiPlaceOrder.builder().uuid(UID_2).orderId(203).price(18_000).reservePrice(18_500).size(500).action(OrderAction.BID).orderType(GTC).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
                     });
@@ -550,19 +555,19 @@ public abstract class ITExchangeCoreIntegration {
 
             // cancel remaining order
             container.submitCommandSync(
-                    ApiCancelOrder.builder().orderId(203).uid(UID_2).symbol(SYMBOL_EXCHANGE).build(),
+                    ApiCancelOrder.builder().orderId(203).uuid(UID_2).symbol(SYMBOL_EXCHANGE).build(),
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.CANCEL_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.CANCEL_ORDER));
                         assertThat(cmd.orderId, is(203L));
-                        assertThat(cmd.uid, is(UID_2));
+                        assertThat(cmd.uuid, is(UID_2));
                         assertThat(cmd.symbol, is(SYMBOL_EXCHANGE));
 
                         assertThat(cmd.action, is(OrderAction.BID));
 
-                        final MatcherTradeEvent evt = cmd.matcherEvent;
+                        final MatchTradeEventHandler evt = cmd.matchTradeEventHandler;
                         assertNotNull(evt);
-                        assertThat(evt.eventType, is(MatcherEventType.REDUCE));
+                        assertThat(evt.matchEventType, is(MatchEventType.REDUCE));
                         assertThat(evt.bidderHoldPrice, is(18_500L));
                         assertThat(evt.size, is(500L));
                     });

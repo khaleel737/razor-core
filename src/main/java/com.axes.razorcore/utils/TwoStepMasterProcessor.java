@@ -1,8 +1,8 @@
 package com.axes.razorcore.utils;
 
 import com.axes.razorcore.config.RazorCoreWaitStrategy;
-import com.axes.razorcore.core.OrderCommandType;
-import com.axes.razorcore.data.OrderCommand;
+import com.axes.razorcore.cqrs.OrderCommandType;
+import com.axes.razorcore.cqrs.OrderCommand;
 import com.lmax.disruptor.*;
 import lombok.Setter;
 

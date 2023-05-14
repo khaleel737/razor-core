@@ -1,9 +1,9 @@
-package com.axes.razorcore.data;
+package com.axes.razorcore.cqrs;
 
 import com.axes.razorcore.core.IOrder;
 import com.axes.razorcore.core.OrderAction;
-import com.axes.razorcore.core.OrderCommandType;
 import com.axes.razorcore.core.OrderType;
+import com.axes.razorcore.data.L2MarketData;
 import com.axes.razorcore.event.MatchTradeEventHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -53,6 +53,7 @@ command.price = price;
 command.reserveBidPrice = reserveBidPrice;
 command.size = size;
 command.action = orderAction;
+command.orderType = orderType;
 command.resultCode = CommandResultCode.VALID_FOR_MATCHING_ENGINE;
 return command;
 }

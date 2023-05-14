@@ -15,8 +15,8 @@
  */
 package com.axes.razorcore.utils;
 
-import com.axes.razorcore.data.CommandResultCode;
-import com.axes.razorcore.data.OrderCommand;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.OrderCommand;
 import com.axes.razorcore.event.MatchTradeEventHandler;
 import lombok.extern.slf4j.Slf4j;
 

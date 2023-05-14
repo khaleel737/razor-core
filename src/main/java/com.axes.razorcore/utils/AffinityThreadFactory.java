@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public final class AffinityThreadFactory implements ThreadFactory {
 
+
     // There is a bug it LMAX Disruptor, when configuring dependency graph as processors, not handlers.
     // We have to track all threads requested from the factory to avoid duplicate reservations.
     private final Set<Object> affinityReservations = new HashSet<>();
@@ -79,5 +80,4 @@ public final class AffinityThreadFactory implements ThreadFactory {
         THREAD_AFFINITY_ENABLE_PER_LOGICAL_CORE,
         THREAD_AFFINITY_DISABLE
     }
-
 }

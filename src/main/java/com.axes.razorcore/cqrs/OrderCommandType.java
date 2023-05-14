@@ -1,4 +1,4 @@
-package com.axes.razorcore.core;
+package com.axes.razorcore.cqrs;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -5,6 +5,12 @@ package com.axes.razorcore.config;
 //import exchange.core2.core.common.api.binary.BinaryCommandType;
 //import exchange.core2.core.common.api.binary.BinaryDataCommand;
 //import exchange.core2.core.common.api.reports.*;
+
+import com.axes.razorcore.cqrs.command.binary.BatchAddAccountsCommand;
+import com.axes.razorcore.cqrs.command.binary.BatchAddSymbolsCommand;
+import com.axes.razorcore.cqrs.command.binary.BinaryCommandType;
+import com.axes.razorcore.cqrs.command.binary.BinaryDataCommand;
+import com.axes.razorcore.cqrs.query.*;
 import lombok.Getter;
 import net.openhft.chronicle.bytes.BytesIn;
 

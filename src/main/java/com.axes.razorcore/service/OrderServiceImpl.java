@@ -2,7 +2,7 @@ package com.axes.razorcore.service;
 
 import com.axes.razorcore.core.MatchingEngine;
 import com.axes.razorcore.data.Instant;
-import com.axes.razorcore.data.OrderCommand;
+import com.axes.razorcore.cqrs.OrderCommand;
 import com.axes.razorcore.data.OrderRequest;
 
 public class OrderServiceImpl {

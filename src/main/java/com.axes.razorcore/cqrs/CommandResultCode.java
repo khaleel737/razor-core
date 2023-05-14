@@ -1,4 +1,4 @@
-package com.axes.razorcore.data;
+package com.axes.razorcore.cqrs;
 
 import lombok.Getter;
 

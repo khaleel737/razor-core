@@ -1,6 +1,6 @@
 package com.axes.razorcore.order;
 
-import com.axes.razorcore.data.OrderCommand;
+import com.axes.razorcore.cqrs.OrderCommand;
 
 import java.io.Serializable;
 

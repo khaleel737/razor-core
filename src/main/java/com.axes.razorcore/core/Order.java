@@ -1,6 +1,5 @@
 package com.axes.razorcore.core;
 
-import com.axes.razorcore.data.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,7 +27,7 @@ public final class Order implements WriteBytesMarshallable, IOrder {
     @Getter
     public long quantity;
     @Getter
-    public Instant timestamp;
+    public long timestamp;
     @Getter
     public long size;
     @Getter
@@ -43,7 +42,7 @@ public final class Order implements WriteBytesMarshallable, IOrder {
         this.orderId = bytes.readLong();
         this.price = bytes.readLong();
         this.quantity = bytes.readLong();
-        this.timestamp = Instant.ofEpochMilli(bytes.readByte());
+        this.timestamp = bytes.readLong();
         this.size = bytes.readLong();
         this.filled = bytes.readLong();
         this.reserveBidPrice = bytes.readLong();
@@ -61,7 +60,7 @@ public final class Order implements WriteBytesMarshallable, IOrder {
         bytes.writeLong(filled);
         bytes.writeLong(reserveBidPrice);
         bytes.writeLong(action.getCode());
-        bytes.writeLong(timestamp.getNano());
+        bytes.writeLong(timestamp);
     }
 
 

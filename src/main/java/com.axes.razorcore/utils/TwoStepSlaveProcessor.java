@@ -1,13 +1,14 @@
 package com.axes.razorcore.utils;
 
 import com.axes.razorcore.config.RazorCoreWaitStrategy;
-import com.axes.razorcore.data.OrderCommand;
+import com.axes.razorcore.cqrs.OrderCommand;
 import com.lmax.disruptor.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class TwoStepSlaveProcessor implements EventProcessor {
-
     private static final int IDLE = 0;
     private static final int HALTED = IDLE + 1;
     private static final int RUNNING = HALTED + 1;
@@ -16,7 +17,6 @@ public class TwoStepSlaveProcessor implements EventProcessor {
     private final DataProvider<OrderCommand> dataProvider;
     private final SequenceBarrier sequenceBarrier;
     private final WaitSpinningHelper waitSpinningHelper;
-
     private final SimpleEventHandler eventHandler;
     private final Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
     private final ExceptionHandler<? super OrderCommand> exceptionHandler;
@@ -24,12 +24,11 @@ public class TwoStepSlaveProcessor implements EventProcessor {
 
     private long nextSequence = -1;
 
-    public TwoStepSlaveProcessor(RingBuffer<OrderCommand> ringBuffer,
-                                 SequenceBarrier sequenceBarrier,
-                                 WaitSpinningHelper waitSpinningHelper,
-                                 SimpleEventHandler eventHandler,
-                                 ExceptionHandler<? super OrderCommand> exceptionHandler,
-                                 String name) {
+    public TwoStepSlaveProcessor(final RingBuffer<OrderCommand> ringBuffer,
+                                 final SequenceBarrier sequenceBarrier,
+                                 final SimpleEventHandler eventHandler,
+                                 final ExceptionHandler<? super OrderCommand> exceptionHandler,
+                                 final String name) {
         this.dataProvider = ringBuffer;
         this.sequenceBarrier = sequenceBarrier;
         this.waitSpinningHelper = new WaitSpinningHelper(ringBuffer, sequenceBarrier, 0, RazorCoreWaitStrategy.SECOND_STEP_NO_WAIT);
@@ -54,6 +53,11 @@ public class TwoStepSlaveProcessor implements EventProcessor {
         return running.get() != IDLE;
     }
 
+    /**
+     * It is ok to have another thread rerun this method after a halt().
+     *
+     * @throws IllegalStateException if this object instance is already running in a thread
+     */
     @Override
     public void run() {
         if (running.compareAndSet(IDLE, RUNNING)) {
@@ -96,16 +100,6 @@ public class TwoStepSlaveProcessor implements EventProcessor {
 
     @Override
     public String toString() {
-        return "TwoStepSlaveProcessor{" +
-                "running=" + running +
-                ", dataProvider=" + dataProvider +
-                ", sequenceBarrier=" + sequenceBarrier +
-                ", waitSpinningHelper=" + waitSpinningHelper +
-                ", eventHandler=" + eventHandler +
-                ", sequence=" + sequence +
-                ", exceptionHandler=" + exceptionHandler +
-                ", name='" + name + '\'' +
-                ", nextSequence=" + nextSequence +
-                '}';
+        return "TwoStepSlaveProcessor{" + name + "}";
     }
 }

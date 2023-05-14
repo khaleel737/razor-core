@@ -1,6 +1,6 @@
 package com.axes.razorcore.utils;
 
-import com.axes.razorcore.data.OrderCommand;
+import com.axes.razorcore.cqrs.OrderCommand;
 
 public interface SimpleEventHandler {
 

@@ -20,7 +20,7 @@ public class MatchTradeEventHandler {
 //    Matched Orders
     public long matchedPositionsId;
     public long matchedPositionsUuid;
-    public long matchedPositionsCompleted;
+    public boolean matchedPositionsCompleted;
 
     public long price;
     public long size;

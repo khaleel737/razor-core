@@ -3,12 +3,12 @@ package com.axes.razorcore.config;
 import com.axes.razorcore.orderbook.IOrderBook;
 import com.axes.razorcore.orderbook.OrderBookDirectImpl;
 import com.axes.razorcore.orderbook.OrderBookNaiveImpl;
+import com.axes.razorcore.utils.AffinityThreadFactory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
-import net.openhft.affinity.AffinityThreadFactory;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Supplier;

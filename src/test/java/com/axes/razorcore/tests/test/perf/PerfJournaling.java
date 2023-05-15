@@ -15,8 +15,8 @@
  */
 package com.axes.razorcore.tests.test.perf;
 
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.*;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.tests.test.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

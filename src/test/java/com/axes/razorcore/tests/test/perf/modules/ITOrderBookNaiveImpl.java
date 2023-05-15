@@ -15,10 +15,10 @@
  */
 package com.axes.razorcore.tests.test.perf.modules;
 
-import exchange.core2.core.common.config.LoggingConfiguration;
-import exchange.core2.core.orderbook.IOrderBook;
-import exchange.core2.core.orderbook.OrderBookNaiveImpl;
-import exchange.core2.tests.util.TestConstants;
+import com.axes.razorcore.config.LoggingConfiguration;
+import com.axes.razorcore.orderbook.IOrderBook;
+import com.axes.razorcore.orderbook.OrderBookNaiveImpl;
+import com.axes.razorcore.tests.test.util.TestConstants;
 
 public class ITOrderBookNaiveImpl extends ITOrderBookBase {
 

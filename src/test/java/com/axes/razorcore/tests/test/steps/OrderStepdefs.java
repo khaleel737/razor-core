@@ -1,6 +1,7 @@
 package com.axes.razorcore.tests.test.steps;
 
 import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.core.Order;
 import com.axes.razorcore.core.OrderAction;
 import com.axes.razorcore.core.OrderType;
 import com.axes.razorcore.core.SymbolSpecification;
@@ -8,6 +9,7 @@ import com.axes.razorcore.cqrs.CommandResultCode;
 import com.axes.razorcore.cqrs.OrderCommandType;
 import com.axes.razorcore.cqrs.command.*;
 import com.axes.razorcore.cqrs.query.SingleUserReportResult;
+import com.axes.razorcore.event.MatchEventType;
 import com.axes.razorcore.event.MatchTradeEventHandler;
 import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
 import com.axes.razorcore.tests.test.util.L2MarketDataHelper;
@@ -23,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.axes.razorcore.tests.test.util.ExchangeTestContainer.CHECK_SUCCESS;
+import static com.axes.razorcore.tests.test.util.TestConstants.SYMBOLSPEC_ETH_XBT;
 import static com.axes.razorcore.tests.test.util.TestConstants.SYMBOLSPEC_EUR_USD;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -109,13 +113,13 @@ public class OrderStepdefs implements En {
 
                 final List<ApiCommand> cmds = new ArrayList<>();
 
-                cmds.add(ApiAddUser.builder().uid(clientId).build());
+                cmds.add(ApiAddUser.builder().uuid(clientId).build());
 
                 int transactionId = 0;
 
                 for (List<String> entry : balance) {
                     transactionId++;
-                    cmds.add(ApiAdjustUserBalance.builder().uid(clientId).transactionId(transactionId)
+                    cmds.add(ApiAdjustUserBalance.builder().uuid(clientId).transactionId(transactionId)
                         .amount(Long.parseLong(entry.get(1)))
                         .currency(TestConstants.getCurrency(entry.get(0)))
                         .build());
@@ -126,14 +130,14 @@ public class OrderStepdefs implements En {
             });
 
         When("A client {user} places an {word} order {long} at {long}@{long} \\(type: {word}, symbol: {symbol})",
-            (Long clientId, String side, Long orderId, Long price, Long size, String orderType, CoreSymbolSpecification symbol) -> {
+            (Long clientId, String side, Long orderId, Long price, Long size, String orderType, SymbolSpecification symbol) -> {
                 aClientPassAnOrder(clientId, side, orderId, price, size, orderType, symbol, 0,
                     CommandResultCode.SUCCESS);
             });
 
         When(
             "A client {user} places an {word} order {long} at {long}@{long} \\(type: {word}, symbol: {symbol}, reservePrice: {long})",
-            (Long clientId, String side, Long orderId, Long price, Long size, String orderType, CoreSymbolSpecification symbol, Long reservePrice) -> {
+            (Long clientId, String side, Long orderId, Long price, Long size, String orderType, SymbolSpecification symbol, Long reservePrice) -> {
                 aClientPassAnOrder(clientId, side, orderId, price, size, orderType, symbol, reservePrice,
                     CommandResultCode.SUCCESS);
             });
@@ -165,14 +169,14 @@ public class OrderStepdefs implements En {
             });
 
         Then("An {symbol} order book is:",
-            (CoreSymbolSpecification symbol, L2MarketDataHelper orderBook) -> {
+            (SymbolSpecification symbol, L2MarketDataHelper orderBook) -> {
                 assertEquals(orderBook.build(), container.requestCurrentOrderBook(symbol.symbolId));
             });
 
         When(
             "A client {user} could not place an {word} order {long} at {long}@{long} \\(type: {word}, symbol: {symbol}, reservePrice: {long}) due to {word}",
             (Long clientId, String side, Long orderId, Long price, Long size,
-                String orderType, CoreSymbolSpecification symbol, Long reservePrice, String resultCode) -> {
+                String orderType, SymbolSpecification symbol, Long reservePrice, String resultCode) -> {
                 aClientPassAnOrder(clientId, side, orderId, price, size, orderType, symbol, reservePrice,
                     CommandResultCode.valueOf(resultCode));
             });
@@ -236,7 +240,7 @@ public class OrderStepdefs implements En {
 
                 // add 1 szabo more
                 container.submitCommandSync(ApiAdjustUserBalance.builder()
-                    .uid(clientId)
+                    .uuid(clientId)
                     .currency(TestConstants.getCurrency(currency))
                     .amount(ammount).transactionId(2193842938742L).build(), CHECK_SUCCESS);
             });
@@ -245,31 +249,31 @@ public class OrderStepdefs implements En {
             (Long clientId, Long size, Long orderId) -> {
                 ApiPlaceOrder initialOrder = orders.get(orderId);
 
-                ApiCancelOrder order = ApiCancelOrder.builder().orderId(orderId).uid(clientId)
+                ApiCancelOrder order = ApiCancelOrder.builder().orderId(orderId).uuid(clientId)
                     .symbol(initialOrder.symbol)
                     .build();
 
                 container.getApi().submitCommandAsyncFullResponse(order).thenAccept(
                     cmd -> {
                         assertThat(cmd.resultCode, is(CommandResultCode.SUCCESS));
-                        assertThat(cmd.command, is(OrderCommandType.CANCEL_ORDER));
+                        assertThat(cmd.commandType, is(OrderCommandType.CANCEL_ORDER));
                         assertThat(cmd.orderId, is(orderId));
-                        assertThat(cmd.uid, is(clientId));
+                        assertThat(cmd.uuid, is(clientId));
                         assertThat(cmd.symbol, is(initialOrder.symbol));
                         assertThat(cmd.action, is(initialOrder.action));
 
-                        final MatcherTradeEvent evt = cmd.matcherEvent;
+                        final MatchTradeEventHandler evt = cmd.matchTradeEventHandler;
                         assertNotNull(evt);
-                        assertThat(evt.eventType, is(MatcherEventType.REDUCE));
+                        assertThat(evt.matchEventType, is(MatchEventType.REDUCE));
                         assertThat(evt.size, is(size));
                     }).join();
             });
     }
 
     private void aClientPassAnOrder(long clientId, String side, long orderId, long price, long size, String orderType,
-        CoreSymbolSpecification symbol, long reservePrice, CommandResultCode resultCode) {
+        SymbolSpecification symbol, long reservePrice, CommandResultCode resultCode) {
 
-        ApiPlaceOrder.ApiPlaceOrderBuilder builder = ApiPlaceOrder.builder().uid(clientId).orderId(orderId).price(price)
+        ApiPlaceOrder.ApiPlaceOrderBuilder builder = ApiPlaceOrder.builder().uuid(clientId).orderId(orderId).price(price)
             .size(size)
             .action(OrderAction.valueOf(side)).orderType(OrderType.valueOf(orderType))
             .symbol(symbol.symbolId);
@@ -286,7 +290,7 @@ public class OrderStepdefs implements En {
         container.getApi().submitCommandAsyncFullResponse(order).thenAccept(cmd -> {
             assertThat(cmd.orderId, is(orderId));
             assertThat(cmd.resultCode, is(resultCode));
-            assertThat(cmd.uid, is(clientId));
+            assertThat(cmd.uuid, is(clientId));
             assertThat(cmd.price, is(price));
             assertThat(cmd.size, is(size));
             assertThat(cmd.action, is(OrderAction.valueOf(side)));
@@ -300,11 +304,11 @@ public class OrderStepdefs implements En {
     private void theOrderIsMatched(long orderId, long lastPx, long lastQty, boolean completed, Long bidderHoldPrice) {
         assertThat(matcherEvents.size(), is(1));
 
-        MatcherTradeEvent evt = matcherEvents.get(0);
-        assertThat(evt.matchedOrderId, is(orderId));
-        assertThat(evt.matchedOrderUid, is(orders.get(orderId).uid));
-        assertThat(evt.matchedOrderCompleted, is(completed));
-        assertThat(evt.eventType, is(MatcherEventType.TRADE));
+        MatchTradeEventHandler evt = matcherEvents.get(0);
+        assertThat(evt.matchedPositionsId, is(orderId));
+        assertThat(evt.matchedPositionsUuid, is(orders.get(orderId).uuid));
+        assertThat(evt.matchedPositionsCompleted, is(completed));
+        assertThat(evt.matchEventType, is(MatchEventType.TRADE));
         assertThat(evt.size, is(lastQty));
         assertThat(evt.price, is(lastPx));
         if (bidderHoldPrice != null) {
@@ -315,13 +319,13 @@ public class OrderStepdefs implements En {
     private void moveOrder(long clientId, long newPrice, long orderId, CommandResultCode resultCode2) {
         ApiPlaceOrder initialOrder = orders.get(orderId);
 
-        final ApiMoveOrder moveOrder = ApiMoveOrder.builder().symbol(initialOrder.symbol).uid(clientId).orderId(orderId)
+        final ApiMoveOrder moveOrder = ApiMoveOrder.builder().symbol(initialOrder.symbol).uuid(clientId).orderId(orderId)
             .newPrice(newPrice).build();
         log.debug("MOVE : {}", moveOrder);
         container.submitCommandSync(moveOrder, cmd -> {
             assertThat(cmd.resultCode, is(resultCode2));
             assertThat(cmd.orderId, is(orderId));
-            assertThat(cmd.uid, is(clientId));
+            assertThat(cmd.uuid, is(clientId));
 
             matcherEvents = cmd.extractEvents();
         });

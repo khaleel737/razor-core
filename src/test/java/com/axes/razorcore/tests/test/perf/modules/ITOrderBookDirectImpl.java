@@ -15,12 +15,12 @@
  */
 package com.axes.razorcore.tests.test.perf.modules;
 
+import com.axes.razorcore.config.LoggingConfiguration;
+import com.axes.razorcore.orderbook.IOrderBook;
+import com.axes.razorcore.orderbook.OrderBookDirectImpl;
+import com.axes.razorcore.orderbook.OrderBookEventsHelper;
+import com.axes.razorcore.tests.test.util.TestConstants;
 import exchange.core2.collections.objpool.ObjectsPool;
-import exchange.core2.core.common.config.LoggingConfiguration;
-import exchange.core2.core.orderbook.IOrderBook;
-import exchange.core2.core.orderbook.OrderBookDirectImpl;
-import exchange.core2.core.orderbook.OrderBookEventsHelper;
-import exchange.core2.tests.util.TestConstants;
 
 public class ITOrderBookDirectImpl extends ITOrderBookBase {
 

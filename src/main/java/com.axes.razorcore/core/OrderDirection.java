@@ -33,5 +33,4 @@ public enum OrderDirection {
     public boolean isSameOrderDirection(OrderDirection direction) {
         return false;
     }
-
 }

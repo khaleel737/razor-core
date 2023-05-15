@@ -15,14 +15,14 @@
  */
 package com.axes.razorcore.tests.test.perf.modules;
 
-import exchange.core2.core.common.L2MarketData;
-import exchange.core2.core.common.cmd.CommandResultCode;
-import exchange.core2.core.common.cmd.OrderCommand;
-import exchange.core2.core.orderbook.IOrderBook;
-import exchange.core2.tests.util.TestOrdersGenerator;
-import jdk.nashorn.internal.ir.annotations.Ignore;
+import com.axes.razorcore.cqrs.CommandResultCode;
+import com.axes.razorcore.cqrs.OrderCommand;
+import com.axes.razorcore.data.L2MarketData;
+import com.axes.razorcore.orderbook.IOrderBook;
+import com.axes.razorcore.tests.test.util.TestOrdersGenerator;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.affinity.AffinityLock;
+import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,9 +31,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static exchange.core2.core.common.OrderAction.ASK;
-import static exchange.core2.core.common.OrderAction.BID;
-import static exchange.core2.core.common.OrderType.IOC;
+import static com.axes.razorcore.core.OrderAction.ASK;
+import static com.axes.razorcore.core.OrderAction.BID;
+import static com.axes.razorcore.core.OrderType.IOC;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 /**

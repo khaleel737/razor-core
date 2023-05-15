@@ -15,11 +15,11 @@
  */
 package com.axes.razorcore.tests.test.perf;
 
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.ExchangeTestContainer;
-import exchange.core2.tests.util.PersistenceTestsModule;
-import exchange.core2.tests.util.TestDataParameters;
-import exchange.core2.tests.util.TestOrdersGeneratorConfig;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.tests.test.util.ExchangeTestContainer;
+import com.axes.razorcore.tests.test.util.PersistenceTestsModule;
+import com.axes.razorcore.tests.test.util.TestDataParameters;
+import com.axes.razorcore.tests.test.util.TestOrdersGeneratorConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

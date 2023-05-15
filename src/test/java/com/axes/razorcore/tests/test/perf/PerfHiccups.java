@@ -15,13 +15,13 @@
  */
 package com.axes.razorcore.tests.test.perf;
 
-import exchange.core2.core.common.config.InitialStateConfiguration;
-import exchange.core2.core.common.config.PerformanceConfiguration;
-import exchange.core2.tests.util.TestDataParameters;
+import com.axes.razorcore.config.InitialStateConfiguration;
+import com.axes.razorcore.config.PerformanceConfiguration;
+import com.axes.razorcore.tests.test.util.TestDataParameters;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import static exchange.core2.tests.util.LatencyTestsModule.hiccupTestImpl;
+import static com.axes.razorcore.tests.test.util.LatencyTestsModule.hiccupTestImpl;
 
 
 @Slf4j
